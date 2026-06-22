@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>CRM Réservations</title>
+  <link rel="stylesheet" href="css/admin.css"/>
+  <script>window.PAGE_SOURCE = 'all';</script>
+  <script src="js/site-config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/panel-lang.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🚗 <strong>CRM</strong> <span data-pt="lg-title">Réservations</span></div>
+    <h2 data-pt="lg-connexion">Connexion</h2>
+    <p class="login-desc" data-pt="lg-desc">Accès réservé aux administrateurs</p>
+    <div class="form-group">
+      <label data-pt="lg-user">Identifiant</label>
+      <input type="text" id="loginUser" data-pt-ph="lg-user-ph" placeholder="Votre identifiant" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="form-group">
+      <label data-pt="lg-pass">Mot de passe</label>
+      <div class="pass-wrap">
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+        <button class="eye-btn" onclick="togglePass()">👁</button>
+      </div>
+    </div>
+    <button class="btn-primary" data-pt="lg-submit" onclick="doLogin()">Se connecter →</button>
+    <p class="login-err" id="loginErr"></p>
+    <a href="#" class="login-forgot" data-pt="lg-forgot" onclick="event.preventDefault();openForgot()">Mot de passe oublié ?</a>
+  </div>
+
+  <div class="login-box" id="forgotBox" style="display:none">
+    <h2 data-pt="lg-recovery">🔑 Récupération</h2>
+    <div id="forgotStep1">
+      <p class="login-desc" id="forgotQuestionText"></p>
+      <div class="form-group">
+        <label data-pt="lg-answer">Votre réponse</label>
+        <input type="date" id="forgotAnswer"/>
+      </div>
+      <button class="btn-primary" data-pt="lg-verify" onclick="checkForgotAnswer()">Vérifier →</button>
+    </div>
+    <div id="forgotStep2" style="display:none">
+      <div class="form-group">
+        <label data-pt="lg-newuser">Nouvel identifiant</label>
+        <input type="text" id="forgotNewUser"/>
+      </div>
+      <div class="form-group">
+        <label data-pt="lg-newpass">Nouveau mot de passe</label>
+        <input type="password" id="forgotNewPass"/>
+      </div>
+      <button class="btn-primary" data-pt="lg-reset" onclick="submitForgotReset()">Réinitialiser →</button>
+    </div>
+    <p class="login-err" id="forgotErr"></p>
+    <a href="#" class="login-forgot" data-pt="lg-back" onclick="event.preventDefault();closeForgot()">← Retour</a>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="app" id="app" style="display:none">
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo" id="sbLogo">🚗 <strong>CRM</strong></div>
+    <nav class="sb-nav">
+      <button class="sb-link active" onclick="showTab('dashboard',this)"><span class="sb-icon">🏠</span><span class="sb-txt" data-pt="nav-dash">Dashboard</span></button>
+      <button class="sb-link" onclick="showTab('reservations',this)"><span class="sb-icon">📋</span><span class="sb-txt" data-pt="nav-res">Réservations</span></button>
+      <button class="sb-link" onclick="showTab('vehicles',this)"><span class="sb-icon">🚙</span><span class="sb-txt" data-pt="nav-vehicles">Véhicules</span></button>
+      <button class="sb-link" onclick="showTab('vidange',this)"><span class="sb-icon">🛢️</span><span class="sb-txt" data-pt="nav-vidange">Vidange</span></button>
+      <button class="sb-link" onclick="showTab('stats',this)"><span class="sb-icon">📊</span><span class="sb-txt" data-pt="nav-stats">Statistiques</span></button>
+      <button class="sb-link" onclick="showTab('settings',this)"><span class="sb-icon">⚙️</span><span class="sb-txt" data-pt="settings">Paramètres</span></button>
+    </nav>
+    <div class="sb-footer">
+      <button class="sb-link" onclick="doLogout()"><span class="sb-icon">🚪</span><span class="sb-txt" data-pt="logout">Déconnexion</span></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <h1 id="pageTitle">📋 Réservations</h1>
+      </div>
+      <div class="topbar-right">
+        <span class="admin-chip" data-pt="topbar-admin">👤 Admin</span>
+      </div>
+    </header>
+
+    <!-- ===== TAB: DASHBOARD ===== -->
+    <div id="tabDashboard" class="tab-content">
+
+      <!-- KPI -->
+      <div class="kpi-grid" id="kpiGrid"></div>
+
+      <div class="dash-row">
+        <div class="dash-panel" style="flex:2">
+          <div class="panel-header">
+            <h3 data-pt="dash-recent">Dernières réservations</h3>
+            <button class="btn-sm" data-pt="dash-seeall" onclick="showTab('reservations',document.querySelectorAll('.sb-link')[1])">Voir tout →</button>
+          </div>
+          <div id="recentList"></div>
+        </div>
+        <div class="dash-panel" style="flex:1">
+          <div class="panel-header"><h3 data-pt="dash-pending">En attente</h3></div>
+          <div id="pendingList"></div>
+        </div>
+      </div>
+
+      <div class="dash-panel">
+        <div class="panel-header"><h3 data-pt="dash-status">Répartition des statuts</h3></div>
+        <div class="status-bars" id="statusBars"></div>
+      </div>
+
+    </div>
+
+    <!-- ===== TAB: RESERVATIONS ===== -->
+    <div id="tabReservations" class="tab-content" style="display:none">
+
+      <div class="filters">
+        <input type="text" id="searchInput" data-pt-ph="res-search-ph" placeholder="🔍 Rechercher nom, voiture, ville, tél..." oninput="renderTable()"/>
+        <select id="filterStatus" onchange="renderTable()">
+          <option value="" data-pt="res-all">Tous les statuts</option>
+          <option value="pending" data-pt="st-pending">En attente</option>
+          <option value="confirmed" data-pt="st-confirmed">Confirmé</option>
+          <option value="completed" data-pt="st-completed">Terminé</option>
+          <option value="cancelled" data-pt="st-cancelled">Annulé</option>
+        </select>
+        <button class="btn-sm" data-pt="res-add" onclick="openManualModal()">➕ Ajouter une réservation</button>
+        <button class="btn-sm" data-pt="res-export" onclick="openExportModal()">⬇️ Export Excel</button>
+        <button class="btn-sm danger" data-pt="res-clear" onclick="clearAll()">🗑️ Vider</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>#</th><th data-pt="th-client">Client</th><th data-pt="th-vehicle">Véhicule</th><th data-pt="th-city">Lieu</th>
+            <th data-pt="th-dates">Dates</th><th data-pt="th-duration">Durée</th><th data-pt="th-total">Total</th><th data-pt="th-payment">Paiement</th><th data-pt="th-status">Statut</th><th data-pt="th-actions">Actions</th>
+          </tr></thead>
+          <tbody id="resBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <span>📭</span><p data-pt="res-empty">Aucune réservation. Cliquez sur "➕ Ajouter une réservation".</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===== TAB: VEHICLES ===== -->
+    <div id="tabVehicles" class="tab-content" style="display:none">
+      <div class="filters">
+        <button class="btn-sm" data-pt="veh-add" onclick="openVehicleModal()">➕ Ajouter un véhicule</button>
+      </div>
+      <div class="kpi-grid" id="vehKpi"></div>
+      <div id="vehGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+      <div class="empty-state" id="vehEmpty" style="display:none">
+        <span>🚙</span><p data-pt="veh-empty">Aucun véhicule. Cliquez sur "➕ Ajouter un véhicule".</p>
+      </div>
+    </div>
+
+    <!-- ===== TAB: VIDANGE ===== -->
+    <div id="tabVidange" class="tab-content" style="display:none">
+      <div class="kpi-grid" id="vidKpi"></div>
+      <div id="vidGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px"></div>
+      <div class="empty-state" id="vidEmpty" style="display:none">
+        <span>🛢️</span><p data-pt="vid-empty">Aucun véhicule. Ajoutez des véhicules dans la section Véhicules.</p>
+      </div>
+    </div>
+
+    <!-- ===== TAB: STATS ===== -->
+    <div id="tabStats" class="tab-content" style="display:none">
+      <div class="kpi-grid" id="statsKpi"></div>
+      <div class="dash-row">
+        <div class="dash-panel" style="flex:1">
+          <div class="panel-header"><h3 data-pt="stat-status">📊 Statuts</h3></div>
+          <div id="statusChart"></div>
+        </div>
+        <div class="dash-panel" style="flex:1">
+          <div class="panel-header"><h3 data-pt="stat-topcars">🚗 Top véhicules</h3></div>
+          <div id="topCars"></div>
+        </div>
+        <div class="dash-panel" style="flex:1">
+          <div class="panel-header"><h3 data-pt="stat-topcities">📍 Top destinations</h3></div>
+          <div id="topCities"></div>
+        </div>
+      </div>
+      <div class="dash-panel">
+        <div class="panel-header"><h3 data-pt="stat-revenue">💰 Revenus par réservation</h3></div>
+        <div id="revenueChart" class="revenue-chart"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: SETTINGS ===== -->
+    <div id="tabSettings" class="tab-content" style="display:none">
+
+      <div class="dash-row">
+        <div class="dash-panel" style="flex:1;min-width:320px">
+          <div class="panel-header"><h3 data-pt="set-lang-t">🌐 Langue du panneau</h3></div>
+          <div class="form-group"><label data-pt="set-lang">Langue</label>
+            <select id="panelLangSel" onchange="applyPanelLang(this.value)">
+              <option value="fr">🇫🇷 Français</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="ar">🇲🇦 العربية</option>
+            </select>
+          </div>
+        </div>
+
+      <div class="dash-panel" style="flex:1;min-width:320px">
+          <div class="panel-header"><h3 data-pt="set-agency-t">🏢 Informations de l'agence</h3></div>
+          <div class="form-group">
+            <label data-pt="set-logo">Logo de l'agence</label>
+            <div style="display:flex;align-items:center;gap:14px">
+              <div id="set_logoPreview" style="width:56px;height:56px;border-radius:10px;background:var(--dark3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.6rem;overflow:hidden;flex-shrink:0">🚗</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <input id="set_logoFile" type="file" accept="image/*" onchange="onLogoFileChange(event)" style="font-size:.78rem;color:var(--muted)"/>
+                <button class="btn-sm danger" style="width:fit-content" data-pt="set-logo-remove" onclick="removeLogo()">🗑️ Retirer le logo</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group"><label data-pt="set-name">Nom de l'agence</label><input id="set_agencyName" type="text" placeholder="Ex: MarocDrive"/></div>
+          <div class="form-group"><label data-pt="set-phone">Téléphone / WhatsApp</label><input id="set_agencyPhone" type="text" placeholder="Ex: 0612345678"/></div>
+          <div class="form-group"><label data-pt="set-email">Email</label><input id="set_agencyEmail" type="email" placeholder="contact@agence.com"/></div>
+          <div class="form-group"><label data-pt="set-address">Adresse</label><input id="set_agencyAddress" type="text" placeholder="Ville, adresse..."/></div>
+          <button class="btn-primary" style="margin-top:6px" data-pt="set-save" onclick="saveAgencySettings()">💾 Enregistrer</button>
+        </div>
+
+        <div class="dash-panel" style="flex:1;min-width:320px">
+          <div class="panel-header"><h3 data-pt="set-creds-t">🔐 Identifiants de connexion</h3></div>
+          <div class="form-group"><label data-pt="set-newuser">Nouvel identifiant</label><input id="set_loginUser" type="text" placeholder="Identifiant"/></div>
+          <div class="form-group"><label data-pt="set-newpass">Nouveau mot de passe</label><input id="set_loginPass" type="password" data-pt-ph="set-newpass-ph" placeholder="Laisser vide pour ne pas changer"/></div>
+          <button class="btn-primary" style="margin-top:6px" data-pt="set-creds-save" onclick="saveCredentials()">🔑 Mettre à jour les identifiants</button>
+          <p class="login-err" id="settingsCredErr" style="text-align:left;color:var(--green)"></p>
+        </div>
+      </div>
+
+      <div class="dash-panel">
+        <div class="panel-header"><h3 data-pt="set-secq-t">❓ Question de sécurité (récupération mot de passe)</h3></div>
+        <div class="form-group"><label data-pt="set-question">Question</label><input id="set_secQuestion" type="text" placeholder="Ex: Date de naissance"/></div>
+        <div class="form-group"><label data-pt="set-answer">Réponse</label><input id="set_secAnswer" type="text" placeholder="Réponse attendue"/></div>
+        <button class="btn-primary" style="max-width:280px" data-pt="set-secq-save" onclick="saveSecurityQuestion()">💾 Enregistrer la question</button>
+      </div>
+
+      <div class="dash-panel">
+        <div class="panel-header"><h3 data-pt="set-danger-t">⚠️ Zone de danger</h3></div>
+        <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px" data-pt="set-danger-s">Réinitialise toutes les données de l'application (réservations, voitures, offres, paramètres).</p>
+        <button class="btn-sm danger" data-pt="set-danger-btn" onclick="factoryReset()">🗑️ Réinitialisation complète</button>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== DETAIL MODAL ===== -->
+<div class="overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="modal" id="detailModal"></div>
+</div>
+
+<!-- ===== VEHICLE MODAL ===== -->
+<div class="overlay" id="vehOverlay" onclick="if(event.target===this)closeVehicleModal()">
+  <div class="modal" id="vehModal"></div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- Export Modal -->
+<div class="modal-overlay" id="exportOverlay" onclick="if(event.target===this)closeExportModal()" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;">
+  <div style="background:#161616;border:1px solid rgba(255,255,255,0.08);border-radius:18px;padding:32px;width:420px;max-width:95vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="font-size:1.1rem;font-weight:700;" data-pt="exp-title">📊 Export Excel</h3>
+      <button onclick="closeExportModal()" style="background:none;border:none;color:#888;font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <p style="color:#888;font-size:0.83rem;margin-bottom:18px;" data-pt="exp-desc">Choisissez la période à exporter.</p>
+    <div id="exportPeriods" style="display:flex;flex-direction:column;gap:10px;">
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="week" checked/><span data-pt="exp-week">📅 Cette semaine</span></label>
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="month"/><span data-pt="exp-month">🗓️ Ce mois (30 jours)</span></label>
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="3months"/><span data-pt="exp-3m">📆 3 derniers mois</span></label>
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="6months"/><span data-pt="exp-6m">📆 6 derniers mois</span></label>
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="year"/><span data-pt="exp-year">📅 Cette année (12 mois)</span></label>
+      <label class="exp-opt"><input type="radio" name="expPeriod" value="all"/><span data-pt="exp-all">🗂️ Toutes les données</span></label>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:22px;">
+      <button onclick="doExport()" style="flex:1;padding:12px;background:#e63329;color:#fff;border:none;border-radius:9px;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:inherit;" data-pt="exp-download">⬇️ Télécharger Excel</button>
+      <button onclick="closeExportModal()" style="padding:12px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);color:#888;border-radius:9px;cursor:pointer;font-family:inherit;" data-pt="exp-cancel">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
