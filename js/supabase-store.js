@@ -64,9 +64,12 @@ function sbStartRealtime() {
       (payload) => {
         const row = payload.new || payload.old;
         if (!row) return;
-        if (payload.eventType === 'DELETE') _rawRemove(row.key);
-        else {
+        if (payload.eventType === 'DELETE') {
+          if (localStorage.getItem(row.key) === null) return; // already gone -> skip echo
+          _rawRemove(row.key);
+        } else {
           const v = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
+          if (localStorage.getItem(row.key) === v) return;     // unchanged -> skip self-echo
           _rawSet(row.key, v);
         }
         window.dispatchEvent(new Event('db-synced'));

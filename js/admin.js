@@ -1658,25 +1658,36 @@ function init() {
   checkEcheanceAlerts();
   renderEchBadge();
 
+}
+
+// One-time global listeners (NOT inside init(), which re-runs on every sync). */
+let _listenersWired = false;
+function wireListeners() {
+  if (_listenersWired) return;
+  _listenersWired = true;
   // detect new reservations from any tab (cross-tab)
   window.addEventListener('storage', e => {
     if (e.key === 'md_reservations') checkNewReservations();
   });
-
   // detect new reservations same-tab (when admin itself saves)
   const _orig = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function(key, val) {
+  localStorage.setItem = function (key, val) {
     _orig(key, val);
     if (key === 'md_reservations') checkNewReservations();
   };
 }
+wireListeners();
 
 applyAgencyLogo();
 
 // App boot is gated by Supabase auth (js/supabase-store.js -> sbEnterApp()).
 // It validates the session, pulls this user's private data, then calls init().
 
-// Re-render after a Supabase realtime sync (js/supabase-store.js)
+// Re-render after a Supabase realtime sync (js/supabase-store.js) — debounced
+// so a burst of synced keys triggers a single lightweight re-render.
+let _syncRenderTimer = null;
 window.addEventListener('db-synced', () => {
-  if (sessionStorage.getItem('md_admin') === '1') init();
+  if (sessionStorage.getItem('md_admin') !== '1') return;
+  clearTimeout(_syncRenderTimer);
+  _syncRenderTimer = setTimeout(init, 150);
 });
