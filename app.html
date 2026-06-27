@@ -35,6 +35,8 @@
     <div class="sb-logo" id="sbLogo">🚗 <strong>CRM</strong></div>
     <nav class="sb-nav">
       <button class="sb-link active" onclick="showTab('dashboard',this)"><span class="sb-icon">🏠</span><span class="sb-txt" data-pt="nav-dash">Dashboard</span></button>
+      <button class="sb-link biz-only" onclick="showTab('global',this)" style="display:none"><span class="sb-icon">🌐</span><span class="sb-txt">Vue globale</span></button>
+      <button class="sb-link biz-only" onclick="showTab('agencies',this)" style="display:none"><span class="sb-icon">🏢</span><span class="sb-txt">Mes agences</span></button>
       <button class="sb-link" onclick="showTab('clients',this)"><span class="sb-icon">👥</span><span class="sb-txt" data-pt="nav-clients">Clients</span></button>
       <button class="sb-link" onclick="showTab('reservations',this)"><span class="sb-icon">📋</span><span class="sb-txt" data-pt="nav-res">Réservations</span></button>
       <button class="sb-link" onclick="showTab('vehicles',this)"><span class="sb-icon">🚙</span><span class="sb-txt" data-pt="nav-vehicles">Véhicules</span></button>
@@ -58,6 +60,7 @@
         <h1 id="pageTitle">📋 Réservations</h1>
       </div>
       <div class="topbar-right">
+        <select id="agencySwitch" class="biz-only" onchange="switchAgency(this.value)" style="display:none;background:var(--dark3,#1a1a1d);color:var(--txt,#fff);border:1px solid var(--border,rgba(255,255,255,.1));border-radius:9px;padding:8px 12px;font-family:inherit;font-weight:600;font-size:.82rem;cursor:pointer"></select>
         <span id="echBadge" onclick="navigateToEcheances()" style="display:none;cursor:pointer;background:var(--red,#e11d2a);color:#fff;font-weight:700;font-size:.8rem;padding:6px 12px;border-radius:999px"></span>
         <span class="admin-chip" data-pt="topbar-admin">👤 Admin</span>
       </div>
@@ -184,6 +187,29 @@
       </div>
     </div>
 
+    <!-- ===== TAB: GLOBAL VIEW (Business) ===== -->
+    <div id="tabGlobal" class="tab-content" style="display:none">
+      <div class="kpi-grid" id="globalKpi"></div>
+      <div class="dash-panel">
+        <div class="panel-header"><h3>🏢 Détail par agence</h3></div>
+        <div id="globalTable"></div>
+      </div>
+    </div>
+
+    <!-- ===== TAB: AGENCIES (Business) ===== -->
+    <div id="tabAgencies" class="tab-content" style="display:none">
+      <div class="dash-panel" style="max-width:520px">
+        <div class="panel-header"><h3>➕ Ajouter une agence</h3></div>
+        <p style="color:var(--muted);font-size:.84rem;margin-bottom:14px">Chaque agence possède son propre système et ses données 100% séparées.</p>
+        <div class="form-group"><label>Nom de l'agence</label><input id="agNewName" type="text" placeholder="Ex: Agence Casablanca"/></div>
+        <button class="btn-primary" onclick="addAgency()">➕ Créer l'agence</button>
+      </div>
+      <div class="dash-panel">
+        <div class="panel-header"><h3>🏢 Mes agences</h3></div>
+        <div id="agencyList"></div>
+      </div>
+    </div>
+
     <!-- ===== TAB: ACCOUNT / SUBSCRIPTION ===== -->
     <div id="tabAccount" class="tab-content" style="display:none">
       <div class="dash-row">
@@ -252,7 +278,7 @@
         <div class="dash-panel" style="flex:1;min-width:320px">
           <div class="panel-header"><h3>🔐 Compte &amp; mot de passe</h3></div>
           <p style="color:var(--muted);font-size:.84rem;line-height:1.6">Votre email, votre abonnement et le changement de mot de passe se trouvent désormais dans la section <b>👤 Mon compte</b>.</p>
-          <button class="btn-primary" style="margin-top:10px" onclick="showTab('account',document.querySelectorAll('.sb-link')[6])">👤 Aller à Mon compte</button>
+          <button class="btn-primary" style="margin-top:10px" onclick="showTab('account',null)">👤 Aller à Mon compte</button>
         </div>
       </div>
 
@@ -305,6 +331,7 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/agency-ui.js"></script>
 <script src="js/supabase-store.js"></script>
 </body>
 </html>

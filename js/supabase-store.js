@@ -18,7 +18,26 @@ function sbIsSyncedKey(k) { return typeof k === 'string' && k.startsWith('md_') 
 
 let SB_USER = null;
 const _rawSet = localStorage.setItem.bind(localStorage);
+const _rawGet = localStorage.getItem.bind(localStorage);
 const _rawRemove = localStorage.removeItem.bind(localStorage);
+
+/* =======================================================================
+   MULTI-AGENCY (Business plan only)
+   - Business accounts can hold UNLIMITED agencies inside one login.
+   - Each agency's data is transparently namespaced: a logical key like
+     `md_reservations` is physically stored as `md_AG_<agencyId>__md_reservations`.
+   - The rest of the app keeps using logical keys unchanged.
+   - Non-Business plans: AG_ACTIVE stays null -> zero behavior change.
+   ======================================================================= */
+const AG_CONTROL = new Set(['md_panel_lang','md_admin','md_admin_creds','md_admin_lockout','md_agencies','md_active_agency','md_wa_notify','md_ech_alerted']);
+let AG_IS_BUSINESS = false;
+let AG_ACTIVE = null;
+function agKey(k) {
+  if (!AG_ACTIVE) return k;
+  if (typeof k !== 'string' || !k.startsWith('md_') || k.startsWith('md_AG_') || AG_CONTROL.has(k)) return k;
+  return 'md_AG_' + AG_ACTIVE + '__' + k;
+}
+function agData(id, key) { try { return JSON.parse(_rawGet('md_AG_' + id + '__' + key) || 'null'); } catch { return null; } }
 
 /* ---- write mirror: app -> Supabase (debounced per key) ---- */
 const _sbPending = new Map();
@@ -39,11 +58,40 @@ async function sbFlush() {
   if (error) console.warn('[supabase] sync failed', error.message);
 }
 
-// Wrap localStorage so any md_* write also goes to the cloud.
+// Wrap localStorage: translate logical->physical (per active agency), persist
+// locally, and mirror md_* writes to the cloud under the physical key.
 localStorage.setItem = function (key, val) {
-  _rawSet(key, val);
-  if (sbIsSyncedKey(key)) sbQueueUpsert(key, val);
+  const pk = agKey(key);
+  _rawSet(pk, val);
+  if (sbIsSyncedKey(pk)) sbQueueUpsert(pk, val);
 };
+localStorage.getItem = function (key) { return _rawGet(agKey(key)); };
+localStorage.removeItem = function (key) { _rawRemove(agKey(key)); };
+
+/* ---- agency setup: decide plan, list, active agency (+ first-time migration) ---- */
+function setupAgencies() {
+  const plan = (SB_USER && SB_USER.user_metadata && SB_USER.user_metadata.plan) || 'Starter';
+  AG_IS_BUSINESS = (plan === 'Business');
+  if (!AG_IS_BUSINESS) { AG_ACTIVE = null; return; }
+  let list; try { list = JSON.parse(_rawGet('md_agencies') || '[]'); } catch { list = []; }
+  if (!Array.isArray(list) || list.length === 0) {
+    // First Business boot: create a default agency and migrate existing data into it.
+    const id = Date.now().toString(36);
+    list = [{ id, name: 'Agence principale', created: Date.now() }];
+    ['md_reservations', 'md_vehicles', 'md_site_settings', 'md_vidange_alerted'].forEach(k => {
+      const v = _rawGet(k);
+      if (v != null) { const pk = 'md_AG_' + id + '__' + k; _rawSet(pk, v); sbQueueUpsert(pk, v); }
+    });
+    _rawSet('md_agencies', JSON.stringify(list)); sbQueueUpsert('md_agencies', JSON.stringify(list));
+    _rawSet('md_active_agency', id); sbQueueUpsert('md_active_agency', id);
+    AG_ACTIVE = id; sbFlush();
+  } else {
+    AG_ACTIVE = _rawGet('md_active_agency');
+    if (!AG_ACTIVE || !list.some(a => a.id === AG_ACTIVE)) {
+      AG_ACTIVE = list[0].id; _rawSet('md_active_agency', AG_ACTIVE); sbQueueUpsert('md_active_agency', AG_ACTIVE);
+    }
+  }
+}
 
 /* ---- read pull: Supabase -> localStorage ---- */
 async function sbPullAll() {
@@ -80,6 +128,8 @@ function sbStartRealtime() {
 /* ---- boot the CRM once a valid session is confirmed ---- */
 async function sbEnterApp() {
   await sbPullAll();
+  setupAgencies();
+  if (typeof applyAgencyUI === 'function') applyAgencyUI();
   sessionStorage.setItem('md_admin', '1');
   const app = document.getElementById('app');
   if (app) app.style.display = 'flex';

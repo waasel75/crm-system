@@ -1064,21 +1064,24 @@ function doExport() {
 /* ===== TABS ===== */
 function showTab(tab, el) {
   document.querySelectorAll('.sb-link').forEach(a=>a.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   if (window.innerWidth <= 768) {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('sidebarBackdrop')?.classList.remove('show');
   }
-  ['Dashboard','Clients','Reservations','Vehicles','Vidange','Stats','Account','Settings'].forEach(t=>{
+  ['Dashboard','Clients','Reservations','Vehicles','Vidange','Stats','Global','Agencies','Account','Settings'].forEach(t=>{
     const el2 = document.getElementById('tab'+t);
     if (el2) el2.style.display = 'none';
   });
-  const map = {dashboard:'Dashboard',clients:'Clients',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',account:'Account',settings:'Settings'};
+  const map = {dashboard:'Dashboard',clients:'Clients',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',global:'Global',agencies:'Agencies',account:'Account',settings:'Settings'};
   const elTab = document.getElementById('tab' + map[tab]);
   if (elTab) elTab.style.display = 'block';
   window.currentAdminTab = tab;
   const L = PANEL_LANGS[localStorage.getItem('md_panel_lang') || 'fr'];
-  document.getElementById('pageTitle').textContent = L.titles[tab] || (tab==='account'?'👤 Mon compte':(tab==='settings'?'⚙️ Paramètres':(tab==='vehicles'?'🚙 Véhicules':(tab==='vidange'?'🛢️ Vidange':tab))));
+  const _fb = {account:'👤 Mon compte',settings:'⚙️ Paramètres',vehicles:'🚙 Véhicules',vidange:'🛢️ Vidange',global:'🌐 Vue globale',agencies:'🏢 Mes agences'};
+  document.getElementById('pageTitle').textContent = L.titles[tab] || _fb[tab] || tab;
+  if (tab==='global' && typeof renderGlobal==='function') renderGlobal();
+  if (tab==='agencies' && typeof renderAgencies==='function') renderAgencies();
   if (tab==='account') renderAccount();
   if (tab==='clients') renderClients();
   if (tab==='reservations') renderTable();
