@@ -132,7 +132,7 @@ async function doSignup() {
   if (_method === 'email') {
     const email = document.getElementById('suEmail').value.trim();
     if (!email) return setMsg('suMsg', '⚠️ Email requis.');
-    creds = { email, password: pass, options: { data: { plan } } };
+    creds = { email, password: pass, options: { data: { plan }, emailRedirectTo: location.origin + location.pathname.replace(/[^/]*$/, '') + APP_URL } };
     target = email; _pending = { type: 'email', id: email };
   } else {
     const phone = normPhone(document.getElementById('suPhone').value);
