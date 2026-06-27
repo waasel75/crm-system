@@ -3,7 +3,9 @@
 const PANEL_LANGS = {
   fr: {
     dir:'ltr',
-    'nav-dash':'Dashboard','nav-res':'Réservations','nav-vehicles':'Véhicules','nav-vidange':'Vidange',
+    'nav-dash':'Dashboard','nav-clients':'Clients','nav-res':'Réservations','nav-vehicles':'Véhicules','nav-vidange':'Vidange',
+    'cl-search-ph':'🔍 Rechercher un client...','cl-export':'📇 Exporter tous les contacts',
+    'd-contract':'Contrat de location','btn-upload-contract':'Téléverser le contrat','btn-download':'Télécharger',
     'nav-stats':'Statistiques','settings':'Paramètres','logout':'Déconnexion',
     'lg-title':'Réservations','lg-connexion':'Connexion','lg-desc':'Accès réservé aux administrateurs',
     'lg-user':'Identifiant','lg-user-ph':'Votre identifiant','lg-pass':'Mot de passe','lg-submit':'Se connecter →',
@@ -54,10 +56,12 @@ const PANEL_LANGS = {
     'vf-lastvidange':'Dernière vidange (km)','vf-interval':'Intervalle vidange (km)','vf-insurance':'Assurance — échéance','vf-visit':'Visite technique — échéance',
     'vid-due':'Vidange dépassée','vid-soon':'Vidange proche (≤1000km)','vid-ok':'OK','vid-overdue':'Vidange dépassée de','vid-remaining':'km restants',
     'vid-last':'Dernière vidange','vid-interval':'Intervalle','vid-next':'Prochaine vidange','btn-edit':'Modifier',
-    titles:{dashboard:'📋 Dashboard',reservations:'📋 Réservations',vehicles:'🚙 Véhicules',vidange:'🛢️ Vidange',stats:'📊 Statistiques',chats:'Conversations',settings:'⚙️ Paramètres'} },
+    titles:{dashboard:'📋 Dashboard',clients:'👥 Clients',reservations:'📋 Réservations',vehicles:'🚙 Véhicules',vidange:'🛢️ Vidange',stats:'📊 Statistiques',chats:'Conversations',settings:'⚙️ Paramètres'} },
   en: {
     dir:'ltr',
-    'nav-dash':'Dashboard','nav-res':'Reservations','nav-vehicles':'Vehicles','nav-vidange':'Oil change',
+    'nav-dash':'Dashboard','nav-clients':'Clients','nav-res':'Reservations','nav-vehicles':'Vehicles','nav-vidange':'Oil change',
+    'cl-search-ph':'🔍 Search a client...','cl-export':'📇 Export all contacts',
+    'd-contract':'Rental contract','btn-upload-contract':'Upload contract','btn-download':'Download',
     'nav-stats':'Statistics','settings':'Settings','logout':'Log out',
     'lg-title':'Reservations','lg-connexion':'Login','lg-desc':'Restricted to administrators',
     'lg-user':'Username','lg-user-ph':'Your username','lg-pass':'Password','lg-submit':'Sign in →',
@@ -108,10 +112,12 @@ const PANEL_LANGS = {
     'vf-lastvidange':'Last oil change (km)','vf-interval':'Oil change interval (km)','vf-insurance':'Insurance — due date','vf-visit':'Technical inspection — due date',
     'vid-due':'Oil change overdue','vid-soon':'Oil change soon (≤1000km)','vid-ok':'OK','vid-overdue':'Overdue by','vid-remaining':'km remaining',
     'vid-last':'Last oil change','vid-interval':'Interval','vid-next':'Next oil change','btn-edit':'Edit',
-    titles:{dashboard:'📋 Dashboard',reservations:'📋 Reservations',vehicles:'🚙 Vehicles',vidange:'🛢️ Oil change',stats:'📊 Statistics',chats:'Conversations',settings:'⚙️ Settings'} },
+    titles:{dashboard:'📋 Dashboard',clients:'👥 Clients',reservations:'📋 Reservations',vehicles:'🚙 Vehicles',vidange:'🛢️ Oil change',stats:'📊 Statistics',chats:'Conversations',settings:'⚙️ Settings'} },
   ar: {
     dir:'rtl',
-    'nav-dash':'لوحة التحكم','nav-res':'الحجوزات','nav-vehicles':'السيارات','nav-vidange':'الفيدانج',
+    'nav-dash':'لوحة التحكم','nav-clients':'العملاء','nav-res':'الحجوزات','nav-vehicles':'السيارات','nav-vidange':'الفيدانج',
+    'cl-search-ph':'🔍 ابحث عن عميل...','cl-export':'📇 تصدير كل جهات الاتصال',
+    'd-contract':'عقد الكراء','btn-upload-contract':'رفع العقد','btn-download':'تحميل',
     'nav-stats':'الإحصائيات','settings':'الإعدادات','logout':'تسجيل الخروج',
     'lg-title':'الحجوزات','lg-connexion':'تسجيل الدخول','lg-desc':'الدخول مخصص للمسؤولين فقط',
     'lg-user':'اسم المستخدم','lg-user-ph':'اسم المستخدم ديالك','lg-pass':'كلمة السر','lg-submit':'← دخول',
@@ -162,7 +168,7 @@ const PANEL_LANGS = {
     'vf-lastvidange':'آخر فيدانج (km)','vf-interval':'إنترفال الفيدانج (km)','vf-insurance':'التأمين — تاريخ الانتهاء','vf-visit':'الزيارة التقنية — تاريخ الانتهاء',
     'vid-due':'الفيدانج فاتت','vid-soon':'الفيدانج قريبة (≤1000km)','vid-ok':'مزيان','vid-overdue':'فاتت بـ','vid-remaining':'كم باقي',
     'vid-last':'آخر فيدانج','vid-interval':'الإنترفال','vid-next':'الفيدانج الجاية','btn-edit':'تعديل',
-    titles:{dashboard:'📋 لوحة التحكم',reservations:'📋 الحجوزات',vehicles:'🚙 السيارات',vidange:'🛢️ الفيدانج',stats:'📊 الإحصائيات',chats:'المحادثات',settings:'⚙️ الإعدادات'} },
+    titles:{dashboard:'📋 لوحة التحكم',clients:'👥 العملاء',reservations:'📋 الحجوزات',vehicles:'🚙 السيارات',vidange:'🛢️ الفيدانج',stats:'📊 الإحصائيات',chats:'المحادثات',settings:'⚙️ الإعدادات'} },
 };
 
 function curLang() { return localStorage.getItem('md_panel_lang') || 'fr'; }

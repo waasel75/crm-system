@@ -83,21 +83,13 @@ function toggleSidebar() {
 }
 
 /* ===== DB ===== */
-function fbUrl() {
-  return (typeof SITE !== 'undefined' && SITE.firebaseUrl && !SITE.firebaseUrl.includes('YOUR_PROJECT')) ? SITE.firebaseUrl : null;
-}
-function fbPush(path, data) {
-  const url = fbUrl();
-  if (!url) return;
-  fetch(`${url}/${path}.json`, { method:'PUT', body: JSON.stringify(data) }).catch(()=>{});
-}
-
+/* Storage is localStorage; cloud sync per user is handled by js/supabase-store.js,
+   which mirrors every md_* key to Supabase. No direct DB calls needed here. */
 function getAll() {
   return JSON.parse(localStorage.getItem('md_reservations')||'[]').map(r => ({ amountPaid:0, ...r }));
 }
 function saveAll(data) {
   localStorage.setItem('md_reservations', JSON.stringify(data));
-  fbPush('reservations', data);
   renderNotif();
 }
 
@@ -223,6 +215,11 @@ function mrCheckAvail() {
     }
   } else {
     msgEl.innerHTML = '';
+  }
+  if (v && +v.price && start && end) {
+    const days = Math.max(1, Math.round((new Date(end)-new Date(start))/86400000));
+    document.getElementById('mr_total').value = days * (+v.price);
+    _mrSyncPaid();
   }
   if (v) {
     const d = start ? new Date(start) : new Date();
@@ -456,44 +453,6 @@ document.addEventListener('click', e => {
   if (wrap && !wrap.contains(e.target)) document.getElementById('notifPanel')?.classList.remove('open');
 });
 
-async function syncFromFirebase() {
-  const FB_URL = fbUrl();
-  if (!FB_URL) return;
-  try {
-    const r = await fetch(`${FB_URL}/reservations.json`);
-    if (r.ok) {
-      const data = await r.json();
-      if (Array.isArray(data)) {
-        const cur = JSON.parse(localStorage.getItem('md_reservations')||'[]');
-        if (JSON.stringify(data) !== JSON.stringify(cur)) {
-          localStorage.setItem('md_reservations', JSON.stringify(data));
-          checkNewReservations();
-        }
-      }
-    }
-  } catch(e) {}
-  try {
-    const r2 = await fetch(`${FB_URL}/vehicles.json`);
-    if (r2.ok) {
-      const data2 = await r2.json();
-      if (Array.isArray(data2)) {
-        const cur2 = JSON.parse(localStorage.getItem('md_vehicles')||'[]');
-        if (JSON.stringify(data2) !== JSON.stringify(cur2)) {
-          localStorage.setItem('md_vehicles', JSON.stringify(data2));
-          if (window.currentAdminTab==='vehicles') renderVehicles();
-          if (window.currentAdminTab==='vidange') renderVidange();
-        }
-      }
-    }
-  } catch(e) {}
-}
-
-function startRealtimeSync() {
-  if (!fbUrl()) return;
-  syncFromFirebase();
-  setInterval(syncFromFirebase, 30000);
-}
-
 function requestNotifPermission() {
   if (Notification?.permission === 'default') Notification.requestPermission();
 }
@@ -588,6 +547,8 @@ function renderDashboard() {
       <div class="sbar-pct">${pct}%</div>
     </div>`;
   }).join('');
+
+  renderEcheances();
 }
 
 /* ===== TABLE ===== */
@@ -673,6 +634,17 @@ function showDetail(id) {
       <button class="btn-sm" style="margin-top:6px;width:100%" onclick="addPayment(${r.id}, ${paymentInfo(r).due})">✅ ${fmtN(paymentInfo(r).due)} MAD</button>
     </div>` : ''}
     <button class="modal-btn-wa" style="margin-top:10px;width:100%" onclick="downloadInvoice(${r.id})">${T('btn-invoice')}</button>
+    <div class="form-group" style="margin-top:12px">
+      <label>📄 ${T('d-contract')||'Contrat de location'}</label>
+      ${r.contract ? `
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          ${r.contract.startsWith('data:image') ? `<img src="${r.contract}" style="width:70px;height:70px;object-fit:cover;border-radius:8px;cursor:pointer" onclick="window.open('${r.contract}','_blank')"/>` : `<span style="font-size:1.6rem">📄</span>`}
+          <a href="${r.contract}" download="${esc(r.contractName)||'contrat_'+r.id+(r.contract.startsWith('data:application/pdf')?'.pdf':'')}" class="btn-sm">⬇️ ${T('btn-download')||'Télécharger'}</a>
+          <button class="btn-sm danger" onclick="removeContract(${r.id})">🗑️ ${T('btn-delete')||'Supprimer'}</button>
+        </div>` : `
+        <input id="contract_file_${r.id}" type="file" accept="image/*,.pdf"/>
+        <button class="btn-sm" style="margin-top:6px" onclick="uploadContract(${r.id})">📤 ${T('btn-upload-contract')||'Téléverser le contrat'}</button>`}
+    </div>
     <div class="detail-row"><span class="dk">${T('d-created')}</span><span class="dv">${new Date(r.createdAt).toLocaleString('fr-FR')}</span></div>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn-sm" style="width:100%" onclick="openEditReservation(${r.id})">${T('btn-edit-all')}</button>
@@ -689,6 +661,161 @@ function showDetail(id) {
 function closeDetail(e) {
   if (!e || e.target===document.getElementById('detailOverlay'))
     document.getElementById('detailOverlay').classList.remove('open');
+}
+
+/* ===== CONTRACT (Contrat de location) ===== */
+function uploadContract(id) {
+  const input = document.getElementById('contract_file_'+id);
+  const file = input?.files?.[0];
+  if (!file) { toast('⚠️ Choisissez un fichier (image ou PDF)'); return; }
+  if (!/^image\/|application\/pdf$/.test(file.type)) { toast('⚠️ Format non supporté — image ou PDF uniquement'); return; }
+  if (file.size > 4*1024*1024) { toast('⚠️ Fichier trop lourd (max 4 Mo)'); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    saveAll(getAll().map(r => r.id==id ? {...r, contract: ev.target.result, contractName: file.name} : r));
+    toast('✅ Contrat téléversé');
+    showDetail(id);
+  };
+  reader.readAsDataURL(file);
+}
+function removeContract(id) {
+  if (!confirm('Supprimer le contrat ?')) return;
+  saveAll(getAll().map(r => r.id==id ? {...r, contract: '', contractName: ''} : r));
+  toast('🗑️ Contrat supprimé');
+  showDetail(id);
+}
+
+/* ===== CLIENTS ===== */
+let _clientSearch = '';
+function avatarColor(seed) {
+  const colors = ['#e63329','#3b82f6','#22c55e','#a855f7','#f59e0b','#06b6d4','#ec4899','#14b8a6'];
+  const s = String(seed || '');
+  let h = 0; for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return colors[h % colors.length];
+}
+
+function renderClients() {
+  const all = getAll();
+  const map = {};
+  for (const r of all) {
+    const key = r.phone || r.name;
+    if (!map[key]) map[key] = { name: r.name, phone: r.phone, email: r.email, reservations: [], total: 0 };
+    map[key].reservations.push(r);
+    if (r.status !== 'cancelled') map[key].total += +r.total || 0;
+  }
+  let clients = Object.values(map).sort((a, b) => b.total - a.total);
+  if (_clientSearch) {
+    const q = _clientSearch.toLowerCase();
+    clients = clients.filter(c => c.name?.toLowerCase().includes(q) || (c.phone||'').includes(q) || c.email?.toLowerCase().includes(q));
+  }
+  document.getElementById('clientCount').textContent = clients.length + ' client(s)';
+  document.getElementById('clientGrid').innerHTML = clients.length
+    ? clients.map(c => {
+        const n = c.reservations.length;
+        const active = c.reservations.filter(r => r.status === 'confirmed' || r.status === 'pending').length;
+        const last = c.reservations[c.reservations.length - 1];
+        return `<div class="client-card" onclick="openClientDetail('${esc(c.phone || c.name).replace(/'/g,"\\'")}')">
+          <div class="cc-top">
+            <div class="cc-avatar" style="background:${avatarColor(c.phone||c.name)}">${esc(initials(c.name))}</div>
+            <div>
+              <div class="cc-name">${esc(c.name)}</div>
+              <div class="cc-phone">${esc(c.phone) || '—'}</div>
+            </div>
+          </div>
+          <div class="cc-stats">
+            <div class="cc-stat"><div class="cc-stat-val">${n}</div><div class="cc-stat-label">Réserv.</div></div>
+            <div class="cc-stat"><div class="cc-stat-val" style="color:var(--green);font-size:.8rem">${fmtN(c.total)}</div><div class="cc-stat-label">MAD total</div></div>
+            <div class="cc-stat"><div class="cc-stat-val" style="color:var(--blue)">${active}</div><div class="cc-stat-label">En cours</div></div>
+          </div>
+          ${last ? `<div style="margin-top:10px;font-size:.73rem;color:var(--muted)">Dernière: 🚗 ${esc(last.car)} · ${fmt(last.start)}</div>` : ''}
+        </div>`;
+      }).join('')
+    : '<div class="empty-state" style="grid-column:1/-1"><span>👥</span><p>Aucun client trouvé</p></div>';
+}
+
+function openClientDetail(key) {
+  const list = getAll().filter(r => (r.phone || r.name) === key);
+  if (!list.length) return;
+  const c = list[0];
+  const totalRevenue = list.filter(r => r.status !== 'cancelled').reduce((s, r) => s + (+r.total||0), 0);
+  document.getElementById('detailModal').innerHTML = `
+    <div class="modal-title"><span>👤 Profil client</span><button class="modal-close-btn" onclick="closeDetail()">✕</button></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div class="cc-avatar" style="width:52px;height:52px;font-size:1rem;background:${avatarColor(c.phone||c.name)}">${esc(initials(c.name))}</div>
+      <div>
+        <div style="font-weight:700;font-size:1rem">${esc(c.name)}</div>
+        <div style="color:var(--muted);font-size:.8rem">${esc(c.phone) || '—'} ${c.email ? '· ' + esc(c.email) : ''}</div>
+      </div>
+    </div>
+    <div class="cc-stats" style="margin-bottom:16px">
+      <div class="cc-stat"><div class="cc-stat-val">${list.length}</div><div class="cc-stat-label">Réservations</div></div>
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--green);font-size:.8rem">${fmtN(totalRevenue)}</div><div class="cc-stat-label">MAD dépensé</div></div>
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--yellow)">${list.filter(r=>r.status==='pending').length}</div><div class="cc-stat-label">En attente</div></div>
+    </div>
+    <div style="font-weight:600;font-size:.82rem;margin-bottom:8px;color:var(--muted)">HISTORIQUE</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${list.map(r => `
+        <div class="res-item" onclick="closeDetail();showDetail(${r.id})" style="cursor:pointer">
+          <div style="flex:1">
+            <div class="res-name">🚗 ${esc(r.car)}</div>
+            <div style="color:var(--muted);font-size:.75rem">${fmt(r.start)} → ${fmt(r.end)} · ${r.days}j</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700">${fmtN(r.total)} MAD</div>
+            <div>${badge(r.status)}</div>
+          </div>
+          ${r.contract ? `<a href="${r.contract}" download="${esc(r.contractName)||'contrat_'+r.id+(r.contract.startsWith('data:application/pdf')?'.pdf':'')}" onclick="event.stopPropagation()" class="btn-sm" style="margin-left:6px">⬇️ ${r.contract.startsWith('data:application/pdf')?'PDF':'Contrat'}</a>` : ''}
+        </div>`).join('')}
+    </div>
+    <div class="modal-actions" style="margin-top:16px">
+      ${c.phone ? `<button class="modal-btn-wa" onclick="window.open('https://wa.me/${(c.phone||'').replace(/\\D/g,'')}','_blank')">📲 WhatsApp</button>` : ''}
+      <button class="btn-sm" onclick="exportContact('${esc(key).replace(/'/g,"\\'")}')">📇 Exporter contact</button>
+      <button class="modal-btn-close" onclick="closeDetail()">Fermer</button>
+    </div>
+  `;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+/* ── CONTACT EXPORT ── */
+function vcardFor(c) {
+  const ag = agencyInfo();
+  return [
+    'BEGIN:VCARD','VERSION:3.0',
+    `FN:${c.name||'Client'}`,
+    `N:${c.name||'Client'};;;;`,
+    c.phone ? `TEL;TYPE=CELL:${c.phone}` : '',
+    c.email ? `EMAIL:${c.email}` : '',
+    `NOTE:Client ${ag.name} — ${c.reservations?c.reservations.length:1} réservation(s)`,
+    'END:VCARD'
+  ].filter(Boolean).join('\n');
+}
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function exportContact(key) {
+  const list = getAll().filter(r => (r.phone || r.name) === key);
+  if (!list.length) return;
+  const c = list[0];
+  downloadFile(vcardFor({...c, reservations:list}), `Contact_${(c.name||'client').replace(/[^a-zA-Z0-9]+/g,'_')}.vcf`, 'text/vcard');
+  toast('📇 Contact exporté');
+}
+function exportAllContacts() {
+  const all = getAll();
+  const map = {};
+  for (const r of all) {
+    const key = r.phone || r.name;
+    if (!map[key]) map[key] = { name: r.name, phone: r.phone, email: r.email, reservations: [] };
+    map[key].reservations.push(r);
+  }
+  const clients = Object.values(map);
+  if (!clients.length) { toast('⚠️ Aucun client à exporter'); return; }
+  downloadFile(clients.map(vcardFor).join('\n'), 'Contacts_clients.vcf', 'text/vcard');
+  toast(`📇 ${clients.length} contact(s) exporté(s)`);
 }
 
 /* ===== STATS ===== */
@@ -942,22 +1069,23 @@ function showTab(tab, el) {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('sidebarBackdrop')?.classList.remove('show');
   }
-  ['Dashboard','Reservations','Vehicles','Vidange','Stats','Chats','Settings'].forEach(t=>{
+  ['Dashboard','Clients','Reservations','Vehicles','Vidange','Stats','Settings'].forEach(t=>{
     const el2 = document.getElementById('tab'+t);
     if (el2) el2.style.display = 'none';
   });
-  const map = {dashboard:'Dashboard',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',chats:'Chats',settings:'Settings'};
+  const map = {dashboard:'Dashboard',clients:'Clients',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',settings:'Settings'};
   const elTab = document.getElementById('tab' + map[tab]);
   if (elTab) elTab.style.display = 'block';
   window.currentAdminTab = tab;
   const L = PANEL_LANGS[localStorage.getItem('md_panel_lang') || 'fr'];
   document.getElementById('pageTitle').textContent = L.titles[tab] || (tab==='settings'?'⚙️ Paramètres':(tab==='vehicles'?'🚙 Véhicules':(tab==='vidange'?'🛢️ Vidange':tab)));
+  if (tab==='clients') renderClients();
   if (tab==='reservations') renderTable();
   if (tab==='vehicles') renderVehicles();
   if (tab==='vidange') renderVidange();
   if (tab==='stats') renderStats();
-  if (tab==='chats') { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; renderChats(); markChatsSeen(); }
   if (tab==='settings') renderSettings();
+  renderEchBadge();
 }
 
 /* ===== VEHICLES ===== */
@@ -970,7 +1098,7 @@ const VSTATUS = {
 function vStatusLabel(k) { return (typeof T==='function' ? T(VSTATUS[k].key) : null) || VSTATUS[k].key; }
 
 function getVehicles() { return JSON.parse(localStorage.getItem('md_vehicles')||'[]'); }
-function saveVehicles(v) { localStorage.setItem('md_vehicles', JSON.stringify(v)); fbPush('vehicles', v); }
+function saveVehicles(v) { localStorage.setItem('md_vehicles', JSON.stringify(v)); }
 
 function vehicleReservations(name) {
   return getAll().filter(r => r.car===name && r.status!=='cancelled' && r.start && r.end)
@@ -1012,7 +1140,11 @@ function renderVehicles() {
     }
     const st = VSTATUS[status];
     const img = (v.images&&v.images[0]) ? `<img src="${v.images[0]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px"/>` : '';
-    return `<div class="dash-panel" style="padding:18px">
+    const ins = echDateInfo(v.insurance), vis = echDateInfo(v.visit), vid = vidangeInfo(v);
+    const vidColor = vid.due ? 'var(--red)' : vid.remaining<=1000 ? 'var(--yellow)' : 'var(--green)';
+    const alertCard = ins.warn || vis.warn || vid.due || vid.remaining<=1000;
+    const infoRow = (icon,label,val,color)=>`<div style="display:flex;justify-content:space-between;gap:8px"><span style="color:var(--muted)">${icon} ${label}</span><span style="color:${color};font-weight:600;text-align:right">${val}</span></div>`;
+    return `<div class="dash-panel" style="padding:18px${alertCard?';border:1px solid var(--yellow)':''}">
       ${img}
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
@@ -1022,6 +1154,11 @@ function renderVehicles() {
         <span class="badge badge-${st.cls}">${st.icon} ${vStatusLabel(status)}</span>
       </div>
       <div style="margin-top:10px;font-size:.82rem;color:var(--muted)">${sub}</div>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;font-size:.78rem;border-top:1px solid rgba(255,255,255,.08);padding-top:10px">
+        ${ins.has ? infoRow('🛡️','Assurance',`${fmt(ins.date)} · ${ins.txt}`, ins.color) : infoRow('🛡️','Assurance','—','var(--muted)')}
+        ${vis.has ? infoRow('🔧','Visite tech.',`${fmt(vis.date)} · ${vis.txt}`, vis.color) : infoRow('🔧','Visite tech.','—','var(--muted)')}
+        ${infoRow('🛢️','Vidange', vid.due?`dépassée de ${Math.abs(vid.remaining)} km`:`${vid.remaining} km restants`, vidColor)}
+      </div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
         <button class="act-btn" onclick="openVehicleCalendar(${v.id})">📅 Calendrier</button>
         <button class="act-btn ok" onclick="openBlockModal(${v.id})">⛔ Réserver</button>
@@ -1120,6 +1257,8 @@ function saveVehicle(id) {
   closeVehicleModal();
   renderVehicles();
   checkVidangeAlerts();
+  checkEcheanceAlerts();
+  renderEchBadge();
   toast('✅ Véhicule enregistré');
 }
 
@@ -1217,6 +1356,8 @@ function saveVidangeEdit(id) {
   saveVehicles(getVehicles().map(v=>v.id===id?{...v,mileage,lastVidangeKm,vidangeInterval}:v));
   renderVidange();
   checkVidangeAlerts();
+  checkEcheanceAlerts();
+  renderEchBadge();
   toast('✅ Vidange mise à jour');
 }
 
@@ -1235,6 +1376,131 @@ function checkVidangeAlerts() {
     }
   });
   localStorage.setItem('md_vidange_alerted', JSON.stringify(seen));
+}
+
+/* ===== ÉCHÉANCES : Assurance & Visite technique ===== */
+const ECH_THRESHOLD = 10; // jours avant échéance
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr); if (isNaN(d)) return null;
+  const today = new Date(); today.setHours(0,0,0,0); d.setHours(0,0,0,0);
+  return Math.round((d - today) / 86400000);
+}
+function echLabelTxt(a) {
+  if (a.vidange) return a.expired ? `vidange dépassée de ${Math.abs(a.remaining)} km` : `vidange dans ${a.remaining} km`;
+  return a.expired ? `dépassée depuis ${Math.abs(a.days)}j`
+       : a.days === 0 ? `expire aujourd'hui` : `dans ${a.days}j`;
+}
+// Statut d'une date d'échéance pour affichage sur la fiche véhicule
+function echDateInfo(dateStr) {
+  const days = daysUntil(dateStr);
+  if (days === null) return { has:false };
+  const expired = days < 0, warn = days <= ECH_THRESHOLD;
+  return {
+    has:true, days, expired, warn, date:dateStr,
+    txt: expired ? `dépassée (${Math.abs(days)}j)` : days === 0 ? `aujourd'hui ⚠️` : `${days}j restants${warn?' ⚠️':''}`,
+    color: expired ? 'var(--red)' : warn ? 'var(--yellow)' : 'var(--green)'
+  };
+}
+function echeanceAlerts() {
+  const out = [];
+  getVehicles().forEach(v => {
+    [['insurance','Assurance','🛡️'], ['visit','Visite technique','🔧']].forEach(([key,label,icon]) => {
+      const days = daysUntil(v[key]);
+      if (days === null || days > ECH_THRESHOLD) return;
+      out.push({ id:v.id, name:v.name, plate:v.plate, key, label, icon, date:v[key], days, expired: days < 0 });
+    });
+    // Vidange (basée sur les km, pas une date) : alerte si dépassée ou proche (<=1000 km)
+    const vi = vidangeInfo(v);
+    if (vi.due || vi.remaining <= 1000) {
+      out.push({ id:v.id, name:v.name, plate:v.plate, key:'vidange', label:'Vidange', icon:'🛢️',
+        vidange:true, remaining:vi.remaining, expired:vi.due, days: vi.due ? -1 : 2 });
+    }
+  });
+  return out.sort((a,b)=> a.days - b.days);
+}
+function renderEcheances() {
+  const wrap = document.getElementById('echeanceList');
+  const card = document.getElementById('echeancePanel');
+  if (!wrap) return;
+  const alerts = echeanceAlerts();
+  if (!alerts.length) { if (card) card.style.display = 'none'; return; }
+  if (card) card.style.display = '';
+  wrap.innerHTML = alerts.map(a => {
+    const cls = a.expired ? 'cancelled' : (a.days <= 3 ? 'pending' : 'confirmed');
+    return `<div class="pending-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div>
+        <div class="pending-name">${a.icon} ${esc(a.name)} — ${a.label}</div>
+        <div class="pending-car">${a.vidange ? esc(a.plate||'—')+' · entretien moteur' : esc(a.plate||'—')+' · échéance '+fmt(a.date)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge badge-${cls}">${echLabelTxt(a)}</span>
+        <button class="p-btn wa" onclick="echeanceWA(${a.id},'${a.key}')">📲</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function echeanceWA(id, key) {
+  const v = getVehicles().find(x => x.id == id); if (!v) return;
+  if (key === 'vidange') {
+    const vi = vidangeInfo(v);
+    const txt = vi.due ? `dépassée de ${Math.abs(vi.remaining)} km` : `dans ${vi.remaining} km`;
+    const msg = `🚗 Rappel Vidange\nVéhicule: ${v.name} (${v.plate||'—'})\nVidange ${txt}.`;
+    window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, '_blank');
+    return;
+  }
+  const label = key === 'insurance' ? 'Assurance' : 'Visite technique';
+  const days = daysUntil(v[key]);
+  const a = { days, expired: days < 0 };
+  const msg = `🚗 Rappel ${label}\nVéhicule: ${v.name} (${v.plate||'—'})\nÉchéance: ${fmt(v[key])} — ${echLabelTxt(a)}.`;
+  window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+// Envoi automatique au propriétaire via CallMeBot (si configuré)
+async function sendOwnerWhatsApp(text) {
+  const cfg = JSON.parse(localStorage.getItem('md_wa_notify') || '{}');
+  if (!cfg.phone || !cfg.apikey) return false;
+  try {
+    await fetch(`https://api.callmebot.com/whatsapp.php?phone=${cfg.phone}&text=${encodeURIComponent(text)}&apikey=${cfg.apikey}`, { mode:'no-cors' });
+    return true;
+  } catch (e) { return false; }
+}
+function setupWANotify() {
+  const cfg = JSON.parse(localStorage.getItem('md_wa_notify') || '{}');
+  const phone = prompt('📲 Numéro WhatsApp à notifier (format international sans +, ex: 212634829085):', cfg.phone || WA);
+  if (phone === null) return;
+  const apikey = prompt('🔑 Clé API CallMeBot\n(Pour l\'obtenir: envoyez « I allow callmebot to send me messages » au +34 644 84 71 89 sur WhatsApp, le bot vous renverra votre clé.)\nLaissez vide pour désactiver l\'envoi auto:', cfg.apikey || '');
+  if (apikey === null) return;
+  localStorage.setItem('md_wa_notify', JSON.stringify({ phone: phone.replace(/\D/g,''), apikey: apikey.trim() }));
+  toast(apikey.trim() ? '✅ Notifications WhatsApp auto activées' : 'ℹ️ Envoi auto désactivé');
+}
+function checkEcheanceAlerts() {
+  const today = new Date().toISOString().slice(0,10);
+  let seen = JSON.parse(localStorage.getItem('md_ech_alerted') || '{}');
+  if (seen._day !== today) seen = { _day: today }; // 1 alerte / échéance / jour
+  echeanceAlerts().forEach(a => {
+    const k = a.id + '_' + a.key;
+    if (seen[k]) return;
+    toast(`${a.icon} ${a.name} : ${a.label} ${echLabelTxt(a)}`);
+    if (Notification?.permission === 'granted') {
+      new Notification(`${a.icon} ${a.label} à renouveler`, { body: `${a.name} (${a.plate||'—'}) — ${echLabelTxt(a)}` });
+    }
+    sendOwnerWhatsApp(`🚗 Rappel ${a.label} — ${a.name} (${a.plate||'—'}) : ${echLabelTxt(a)}.`);
+    seen[k] = 1;
+  });
+  localStorage.setItem('md_ech_alerted', JSON.stringify(seen));
+}
+// Badge d'échéances en haut (topbar) — visible sur toutes les sections
+function renderEchBadge() {
+  const el = document.getElementById('echBadge');
+  if (!el) return;
+  const n = echeanceAlerts().length;
+  if (n) { el.textContent = `🔔 ${n} échéance(s)`; el.style.display = 'inline-block'; }
+  else   { el.style.display = 'none'; }
+}
+function navigateToEcheances() {
+  const link = document.querySelector('.sb-link');
+  if (typeof showTab === 'function') showTab('dashboard', link);
+  setTimeout(() => { const p = document.getElementById('echeancePanel'); if (p) p.scrollIntoView({ behavior:'smooth', block:'center' }); }, 120);
 }
 
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -1329,11 +1595,17 @@ function removeLogo() {
 function applyAgencyLogo() {
   const s = JSON.parse(localStorage.getItem('md_site_settings')||'{}');
   const name = esc(s.agencyName || 'CRM');
-  const img = s.agencyLogo ? `<img src="${s.agencyLogo}" style="width:24px;height:24px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:6px"/>` : '🚗 ';
+  const logoImg = (h, mw) => `<img src="${s.agencyLogo}" style="height:${h}px;width:auto;max-width:${mw}px;border-radius:8px;object-fit:contain;vertical-align:middle;margin-right:12px"/>`;
+  // Sidebar — logo bien visible
   const sbLogo = document.getElementById('sbLogo');
-  if (sbLogo) sbLogo.innerHTML = `${img}<strong>${name}</strong>`;
+  if (sbLogo) sbLogo.innerHTML = s.agencyLogo
+    ? `${logoImg(48, 200)}<strong>${name}</strong>`
+    : `🚗 <strong>${name}</strong>`;
+  // Login — logo grand comme sur le site
   const loginLogo = document.querySelector('.login-logo');
-  if (loginLogo) loginLogo.innerHTML = `${img}<strong>${name}</strong>`;
+  if (loginLogo) loginLogo.innerHTML = s.agencyLogo
+    ? `${logoImg(72, 320)}<span>CRM</span>`
+    : `🚗 <strong>${name}</strong> <span>CRM</span>`;
 }
 
 function saveAgencySettings() {
@@ -1367,109 +1639,10 @@ function saveSecurityQuestion() {
   toast('✅ Question de sécurité enregistrée');
 }
 
-/* ===== CHAT CONVERSATIONS ===== */
-function getChats() { return JSON.parse(localStorage.getItem('md_chat_conversations')||'[]'); }
-function clearChats() { if(confirm('Vider toutes les conversations ?')){ localStorage.removeItem('md_chat_conversations'); renderChats(); toast('🗑 Conversations supprimées'); } }
-
-function toggleChatbot() {
-  const cfg = JSON.parse(localStorage.getItem('md_chat_config')||'{}');
-  cfg.active = !cfg.active;
-  localStorage.setItem('md_chat_config', JSON.stringify(cfg));
-  updateChatToggleUI(cfg.active);
-  toast(cfg.active ? '🤖 Chatbot activé' : '🔕 Chatbot désactivé');
-}
-function updateChatToggleUI(active) {
-  const track = document.getElementById('chatToggleTrack');
-  if (!track) return;
-  track.classList.toggle('on', active);
-}
-function initChatToggle() {
-  const cfg = JSON.parse(localStorage.getItem('md_chat_config')||'{"active":true}');
-  updateChatToggleUI(cfg.active !== false);
-}
-
-function toggleCRM() {
-  const cfg = JSON.parse(localStorage.getItem('md_site_settings')||'{}');
-  cfg.crmEnabled = !cfg.crmEnabled;
-  localStorage.setItem('md_site_settings', JSON.stringify(cfg));
-  updateCRMToggleUI(cfg.crmEnabled);
-  toast(cfg.crmEnabled ? '🗂️ CRM activé' : '🗂️ CRM désactivé');
-}
-function updateCRMToggleUI(active) {
-  const track = document.getElementById('crmToggleTrack');
-  const link  = document.getElementById('crmNavLink');
-  if (track) track.classList.toggle('on', active);
-  if (link)  link.style.display = active ? '' : 'none';
-}
-function initCRMToggle() {
-  const cfg = JSON.parse(localStorage.getItem('md_site_settings')||'{}');
-  updateCRMToggleUI(!!cfg.crmEnabled);
-}
-
-/* ===== CHAT NOTIFICATIONS ===== */
-function totalChatMsgCount() { return getChats().reduce((s,c) => s + c.messages.length, 0); }
-function checkNewChats(showToast) {
-  const seen = +localStorage.getItem('md_chat_seen_count') || 0;
-  const total = totalChatMsgCount();
-  const dot = document.getElementById('chatBadgeDot');
-  if (total > seen) {
-    if (dot) dot.style.display = 'block';
-    if (showToast) toast('💬 Nouveau message dans le chatbot');
-  } else if (dot) dot.style.display = 'none';
-}
-function markChatsSeen() { localStorage.setItem('md_chat_seen_count', totalChatMsgCount()); checkNewChats(false); }
-
-function renderChats() {
-  const all = getChats();
-  const list = document.getElementById('chatList');
-  const detail = document.getElementById('chatDetail');
-  if (!all.length) {
-    list.innerHTML = '<div class="chat-empty">💬<br/>Aucune conversation pour le moment.</div>';
-    detail.innerHTML = '';
-    return;
-  }
-  const fmt = d => new Date(d).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  list.innerHTML = all.map((s,i) => `
-    <div class="chat-item" onclick="showChatDetail(${s.id})" id="ci_${s.id}" style="animation-delay:${i*40}ms">
-      <div class="chat-item-num">#${i+1}</div>
-      <div class="chat-item-body">
-        <div class="chat-item-top"><strong>Session ${i+1}</strong><span>${s.messages.length} msgs</span></div>
-        <div class="chat-item-date">${fmt(s.startedAt)}</div>
-        <div class="chat-item-preview">${esc((s.messages.find(m=>m.role==='user')?.content||'—').slice(0,60))}</div>
-      </div>
-    </div>`).join('');
-  if (all.length) showChatDetail(all[0].id);
-}
-
-function showChatDetail(id) {
-  document.querySelectorAll('.chat-item').forEach(el=>el.classList.remove('active'));
-  const el = document.getElementById('ci_'+id);
-  if (el) el.classList.add('active');
-  const s = getChats().find(x=>x.id===id);
-  if (!s) return;
-  const idx = getChats().findIndex(x=>x.id===id);
-  const fmt = d => new Date(d).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
-  const detail = document.getElementById('chatDetail');
-  detail.classList.remove('chat-detail-anim');
-  detail.innerHTML = `
-    <div class="chat-detail-card">
-      <div class="chat-detail-header">Session #${idx+1} · démarrée le ${new Date(s.startedAt).toLocaleString('fr-FR')}</div>
-      <div class="chat-detail-msgs">
-        ${s.messages.map((m,i)=>`
-          <div class="chat-detail-msg ${m.role}" style="animation-delay:${i*45}ms">
-            <div class="chat-detail-bubble">${esc(m.content).replace(/\n/g,'<br/>')}</div>
-            <div class="chat-detail-time">${m.role==='user'?'Client':'Bot'} · ${fmt(m.time)}</div>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  requestAnimationFrame(()=>detail.classList.add('chat-detail-anim'));
-}
-
-/* ===== DEMO DATA ===== */
 /* ===== FACTORY RESET ===== */
 function factoryReset() {
-  if (!confirm('⚠️ Ceci va supprimer TOUTES les données (réservations, voitures, offres, blocages, conversations, paramètres). Le site repartira à zéro. Continuer ?')) return;
-  ['md_reservations','md_cars','md_offers','md_blocks','md_car_settings','md_site_settings','md_chat_conversations','md_chat_config'].forEach(k=>localStorage.removeItem(k));
+  if (!confirm('⚠️ Ceci va supprimer TOUTES les données (réservations, véhicules, paramètres). Le site repartira à zéro. Continuer ?')) return;
+  ['md_reservations','md_vehicles','md_vidange_alerted','md_cars','md_offers','md_blocks','md_car_settings','md_site_settings'].forEach(k=>localStorage.removeItem(k));
   alert('✅ Toutes les données ont été supprimées. La page va se recharger.');
   location.reload();
 }
@@ -1479,18 +1652,15 @@ function init() {
   applyAgencyLogo();
   renderDashboard();
   renderNotif();
-  initChatToggle();
-  initCRMToggle();
   _initBaseline();
-  startRealtimeSync();
   requestNotifPermission();
-  checkNewChats(false);
   checkVidangeAlerts();
+  checkEcheanceAlerts();
+  renderEchBadge();
 
   // detect new reservations from any tab (cross-tab)
   window.addEventListener('storage', e => {
     if (e.key === 'md_reservations') checkNewReservations();
-    if (e.key === 'md_chat_conversations') checkNewChats(true);
   });
 
   // detect new reservations same-tab (when admin itself saves)
@@ -1503,13 +1673,10 @@ function init() {
 
 applyAgencyLogo();
 
-if (sessionStorage.getItem('md_admin')==='1') {
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('app').style.display='flex';
-  init();
-}
+// App boot is gated by Supabase auth (js/supabase-store.js -> sbEnterApp()).
+// It validates the session, pulls this user's private data, then calls init().
 
-// Re-render after Firebase sync
+// Re-render after a Supabase realtime sync (js/supabase-store.js)
 window.addEventListener('db-synced', () => {
   if (sessionStorage.getItem('md_admin') === '1') init();
 });

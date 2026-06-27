@@ -6,60 +6,16 @@
   <title>CRM Réservations</title>
   <link rel="stylesheet" href="css/admin.css"/>
   <script>window.PAGE_SOURCE = 'all';</script>
-  <script src="js/site-config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/panel-lang.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- ===== LOGIN ===== -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-box">
-    <div class="login-logo">🚗 <strong>CRM</strong> <span data-pt="lg-title">Réservations</span></div>
-    <h2 data-pt="lg-connexion">Connexion</h2>
-    <p class="login-desc" data-pt="lg-desc">Accès réservé aux administrateurs</p>
-    <div class="form-group">
-      <label data-pt="lg-user">Identifiant</label>
-      <input type="text" id="loginUser" data-pt-ph="lg-user-ph" placeholder="Votre identifiant" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()"/>
-    </div>
-    <div class="form-group">
-      <label data-pt="lg-pass">Mot de passe</label>
-      <div class="pass-wrap">
-        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-        <button class="eye-btn" onclick="togglePass()">👁</button>
-      </div>
-    </div>
-    <button class="btn-primary" data-pt="lg-submit" onclick="doLogin()">Se connecter →</button>
-    <p class="login-err" id="loginErr"></p>
-    <a href="#" class="login-forgot" data-pt="lg-forgot" onclick="event.preventDefault();openForgot()">Mot de passe oublié ?</a>
-  </div>
-
-  <div class="login-box" id="forgotBox" style="display:none">
-    <h2 data-pt="lg-recovery">🔑 Récupération</h2>
-    <div id="forgotStep1">
-      <p class="login-desc" id="forgotQuestionText"></p>
-      <div class="form-group">
-        <label data-pt="lg-answer">Votre réponse</label>
-        <input type="date" id="forgotAnswer"/>
-      </div>
-      <button class="btn-primary" data-pt="lg-verify" onclick="checkForgotAnswer()">Vérifier →</button>
-    </div>
-    <div id="forgotStep2" style="display:none">
-      <div class="form-group">
-        <label data-pt="lg-newuser">Nouvel identifiant</label>
-        <input type="text" id="forgotNewUser"/>
-      </div>
-      <div class="form-group">
-        <label data-pt="lg-newpass">Nouveau mot de passe</label>
-        <input type="password" id="forgotNewPass"/>
-      </div>
-      <button class="btn-primary" data-pt="lg-reset" onclick="submitForgotReset()">Réinitialiser →</button>
-    </div>
-    <p class="login-err" id="forgotErr"></p>
-    <a href="#" class="login-forgot" data-pt="lg-back" onclick="event.preventDefault();closeForgot()">← Retour</a>
-  </div>
-</div>
+<!-- Auth is handled on the landing page (index.html). This page is gated by
+     js/supabase-store.js: no valid session -> redirect to index.html. -->
 
 <!-- ===== DASHBOARD ===== -->
 <div class="app" id="app" style="display:none">
@@ -71,6 +27,7 @@
     <div class="sb-logo" id="sbLogo">🚗 <strong>CRM</strong></div>
     <nav class="sb-nav">
       <button class="sb-link active" onclick="showTab('dashboard',this)"><span class="sb-icon">🏠</span><span class="sb-txt" data-pt="nav-dash">Dashboard</span></button>
+      <button class="sb-link" onclick="showTab('clients',this)"><span class="sb-icon">👥</span><span class="sb-txt" data-pt="nav-clients">Clients</span></button>
       <button class="sb-link" onclick="showTab('reservations',this)"><span class="sb-icon">📋</span><span class="sb-txt" data-pt="nav-res">Réservations</span></button>
       <button class="sb-link" onclick="showTab('vehicles',this)"><span class="sb-icon">🚙</span><span class="sb-txt" data-pt="nav-vehicles">Véhicules</span></button>
       <button class="sb-link" onclick="showTab('vidange',this)"><span class="sb-icon">🛢️</span><span class="sb-txt" data-pt="nav-vidange">Vidange</span></button>
@@ -92,6 +49,7 @@
         <h1 id="pageTitle">📋 Réservations</h1>
       </div>
       <div class="topbar-right">
+        <span id="echBadge" onclick="navigateToEcheances()" style="display:none;cursor:pointer;background:var(--red,#e11d2a);color:#fff;font-weight:700;font-size:.8rem;padding:6px 12px;border-radius:999px"></span>
         <span class="admin-chip" data-pt="topbar-admin">👤 Admin</span>
       </div>
     </header>
@@ -101,6 +59,14 @@
 
       <!-- KPI -->
       <div class="kpi-grid" id="kpiGrid"></div>
+
+      <!-- Échéances Assurance / Visite technique -->
+      <div class="dash-panel" id="echeancePanel" style="display:none;border:1px solid var(--yellow)">
+        <div class="panel-header">
+          <h3>🔔 Échéances proches — Assurance, Visite technique &amp; Vidange</h3>
+        </div>
+        <div id="echeanceList"></div>
+      </div>
 
       <div class="dash-row">
         <div class="dash-panel" style="flex:2">
@@ -121,6 +87,16 @@
         <div class="status-bars" id="statusBars"></div>
       </div>
 
+    </div>
+
+    <!-- ===== TAB: CLIENTS ===== -->
+    <div id="tabClients" class="tab-content" style="display:none">
+      <div class="filters">
+        <input type="text" id="clientSearch" data-pt-ph="cl-search-ph" placeholder="🔍 Rechercher un client..." oninput="_clientSearch=this.value;renderClients()"/>
+        <span id="clientCount" style="color:var(--muted);font-size:.82rem;align-self:center"></span>
+        <button class="btn-sm" data-pt="cl-export" onclick="exportAllContacts()" style="margin-left:auto">📇 Exporter tous les contacts</button>
+      </div>
+      <div id="clientGrid" class="client-grid"></div>
     </div>
 
     <!-- ===== TAB: RESERVATIONS ===== -->
@@ -296,7 +272,8 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/supabase-store.js"></script>
 </body>
 </html>

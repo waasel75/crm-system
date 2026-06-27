@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>CRM SYSTEM — Gérez votre agence en toute simplicité</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --bg:#0e0e10; --bg2:#161618; --card:#1a1a1d; --border:rgba(255,255,255,.09);
+      --txt:#f4f4f5; --muted:#a1a1aa; --red:#e63329; --red2:#ff4d42; --green:#22c55e;
+      --radius:16px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 22px}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:11px;padding:13px 22px;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:.15s}
+    .btn-primary{background:var(--red);color:#fff}
+    .btn-primary:hover{background:var(--red2)}
+    .btn-ghost{background:transparent;color:var(--txt);border:1px solid var(--border)}
+    .btn-ghost:hover{border-color:var(--red);color:var(--red2)}
+    .btn-block{width:100%;justify-content:center}
+
+    /* nav */
+    nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:rgba(14,14,16,.78);border-bottom:1px solid var(--border)}
+    .nav-in{display:flex;align-items:center;justify-content:space-between;height:66px}
+    .logo{font-weight:900;font-size:1.25rem;letter-spacing:-.5px}
+    .logo span{color:var(--red2)}
+
+    /* hero */
+    .hero{text-align:center;padding:90px 0 70px}
+    .hero .badge{display:inline-block;background:rgba(230,51,41,.12);color:var(--red2);border:1px solid rgba(230,51,41,.3);padding:6px 14px;border-radius:999px;font-size:.8rem;font-weight:600;margin-bottom:22px}
+    .hero h1{font-size:clamp(2.1rem,5vw,3.6rem);font-weight:900;letter-spacing:-1.5px;line-height:1.08;margin-bottom:20px}
+    .hero h1 em{font-style:normal;color:var(--red2)}
+    .hero p{font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);max-width:620px;margin:0 auto 34px}
+    .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+    /* features */
+    .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;padding:30px 0 70px}
+    .feat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+    .feat .ic{font-size:1.7rem;margin-bottom:12px}
+    .feat h3{font-size:1.05rem;margin-bottom:6px}
+    .feat p{color:var(--muted);font-size:.9rem}
+
+    /* plans */
+    .sec-head{text-align:center;margin-bottom:46px}
+    .sec-head h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;letter-spacing:-1px;margin-bottom:12px}
+    .sec-head p{color:var(--muted);font-size:1.05rem}
+    #plans{padding:40px 0 90px}
+    .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;align-items:stretch}
+    .plan{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 26px;display:flex;flex-direction:column}
+    .plan.hot{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 20px 50px -20px rgba(230,51,41,.5)}
+    .plan .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:5px 14px;border-radius:999px;white-space:nowrap}
+    .plan h3{font-size:1.3rem;font-weight:800;margin-bottom:6px}
+    .plan .desc{color:var(--muted);font-size:.88rem;margin-bottom:20px;min-height:38px}
+    .plan .price{font-size:2.5rem;font-weight:900;letter-spacing:-1px}
+    .plan .price small{font-size:.95rem;font-weight:500;color:var(--muted)}
+    .plan ul{list-style:none;margin:22px 0 26px;display:flex;flex-direction:column;gap:11px}
+    .plan li{display:flex;gap:10px;font-size:.92rem;color:#d4d4d8}
+    .plan li::before{content:"✓";color:var(--green);font-weight:800}
+    .plan .btn{margin-top:auto}
+
+    footer{border-top:1px solid var(--border);padding:34px 0;text-align:center;color:var(--muted);font-size:.85rem}
+
+    /* auth modal */
+    .ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
+    .ov.open{display:flex}
+    .auth{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:430px;max-width:100%;padding:34px;position:relative}
+    .auth .x{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer}
+    .auth h2{font-size:1.45rem;font-weight:800;margin-bottom:6px}
+    .auth .sub{color:var(--muted);font-size:.9rem;margin-bottom:24px}
+    .auth .plan-chip{display:inline-block;background:rgba(230,51,41,.12);color:var(--red2);border:1px solid rgba(230,51,41,.3);font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:999px;margin-bottom:18px}
+    .fld{margin-bottom:15px}
+    .fld label{display:block;font-size:.83rem;font-weight:600;color:var(--muted);margin-bottom:7px}
+    .fld input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px 14px;color:var(--txt);font-family:inherit;font-size:.95rem;outline:none}
+    .fld input:focus{border-color:var(--red)}
+    .otp-input{text-align:center;letter-spacing:.5em;font-size:1.6rem!important;font-weight:800}
+    .auth .msg{font-size:.86rem;margin:6px 0 14px;min-height:18px}
+    .auth .msg.err{color:var(--red2)}
+    .auth .msg.ok{color:var(--green)}
+    .auth .alt{text-align:center;font-size:.88rem;color:var(--muted);margin-top:18px}
+    .auth .alt a{color:var(--red2);font-weight:600;cursor:pointer}
+    .auth .link{color:var(--red2);font-weight:600;cursor:pointer;font-size:.84rem}
+    .hidden{display:none!important}
+    /* method segmented toggle */
+    .seg{display:flex;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:18px}
+    .seg-btn{flex:1;background:transparent;border:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:.9rem;padding:10px;border-radius:8px;cursor:pointer}
+    .seg-btn.active{background:var(--red);color:#fff}
+    /* password requirements */
+    .pwreq{list-style:none;margin:8px 0 14px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+    .pwreq li{font-size:.78rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+    .pwreq li::before{content:"○";font-size:.7rem}
+    .pwreq li.ok{color:var(--green)}
+    .pwreq li.ok::before{content:"✓"}
+    /* show/hide password */
+    .pass-wrap{position:relative}
+    .pass-wrap input{padding-right:46px}
+    .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.05rem;opacity:.65;padding:6px}
+    .eye:hover{opacity:1}
+    /* Google button + divider */
+    .gbtn{gap:10px;background:#fff;color:#1f1f1f}
+    .gbtn:hover{background:#f1f1f1;color:#1f1f1f}
+    .gbtn svg{width:18px;height:18px}
+    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:.78rem}
+    .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="logo">🚗 <span>CRM</span> SYSTEM</div>
+    <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">🚀 La solution tout-en-un pour votre agence de location</span>
+    <h1>Gérez vos réservations,<br/>véhicules &amp; clients <em>en un seul endroit</em></h1>
+    <p>Réservations, factures, échéances d'assurance, statistiques et rappels WhatsApp — tout votre business automobile, automatisé et accessible partout.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="scrollToPlans()">Voir les offres →</button>
+      <button class="btn btn-ghost" onclick="openAuth('login')">J'ai déjà un compte</button>
+    </div>
+  </div>
+</header>
+
+<section class="wrap">
+  <div class="feats">
+    <div class="feat"><div class="ic">📋</div><h3>Réservations</h3><p>Créez et suivez chaque réservation, paiements et statuts en temps réel.</p></div>
+    <div class="feat"><div class="ic">🚙</div><h3>Parc auto</h3><p>Gérez vos véhicules, assurances, visites techniques et vidanges.</p></div>
+    <div class="feat"><div class="ic">📊</div><h3>Statistiques</h3><p>Revenus, top véhicules et destinations — vos chiffres en un coup d'œil.</p></div>
+    <div class="feat"><div class="ic">🔔</div><h3>Rappels auto</h3><p>Alertes d'échéances et notifications WhatsApp automatiques.</p></div>
+  </div>
+</section>
+
+<section id="plans">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Des offres simples &amp; transparentes</h2>
+      <p>Choisissez le plan adapté à votre agence. Sans engagement.</p>
+    </div>
+    <div class="plan-grid" id="planGrid"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© <span id="yr"></span> CRM SYSTEM — Tous droits réservés.</div>
+</footer>
+
+<!-- ===== AUTH MODAL ===== -->
+<div class="ov" id="authOv" onclick="if(event.target===this)closeAuth()">
+  <div class="auth">
+    <button class="x" onclick="closeAuth()">✕</button>
+
+    <!-- SIGNUP -->
+    <div id="vSignup">
+      <span class="plan-chip hidden" id="signupPlan"></span>
+      <h2>Créer votre compte</h2>
+      <p class="sub">Choisissez votre méthode d'inscription.</p>
+      <button class="btn gbtn btn-block" onclick="doGoogle()">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuer avec Google
+      </button>
+      <div class="divider"><span>ou</span></div>
+      <div class="seg" id="suMethod">
+        <button class="seg-btn active" data-m="email" onclick="setMethod('email')">📧 Email</button>
+        <button class="seg-btn" data-m="phone" onclick="setMethod('phone')">📱 Téléphone</button>
+      </div>
+      <div class="fld" id="fldEmail"><label>Email</label><input type="email" id="suEmail" placeholder="votre@email.com" autocomplete="email"/></div>
+      <div class="fld hidden" id="fldPhone"><label>Téléphone</label><input type="tel" id="suPhone" placeholder="+212 6 12 34 56 78" autocomplete="tel"/></div>
+      <div class="fld"><label>Mot de passe</label>
+        <div class="pass-wrap"><input type="password" id="suPass" placeholder="Mot de passe fort" autocomplete="new-password" oninput="pwCheck(this.value)"/><button type="button" class="eye" onclick="eye('suPass',this)">👁</button></div>
+      </div>
+      <ul class="pwreq" id="pwReq">
+        <li data-r="len">8 caractères</li>
+        <li data-r="upper">1 majuscule</li>
+        <li data-r="lower">1 minuscule</li>
+        <li data-r="num">1 chiffre</li>
+        <li data-r="sym">1 symbole @$%&#</li>
+      </ul>
+      <div class="fld"><label>Confirmer le mot de passe</label>
+        <div class="pass-wrap"><input type="password" id="suPass2" placeholder="Retapez le mot de passe" autocomplete="new-password"/><button type="button" class="eye" onclick="eye('suPass2',this)">👁</button></div>
+      </div>
+      <p class="msg" id="suMsg"></p>
+      <button class="btn btn-primary btn-block" onclick="doSignup()">Créer mon compte →</button>
+      <p class="alt">Déjà inscrit ? <a onclick="showView('login')">Se connecter</a></p>
+    </div>
+
+    <!-- OTP CONFIRM -->
+    <div id="vOtp" class="hidden">
+      <h2>Confirmez votre email</h2>
+      <p class="sub">Un code à 6 chiffres a été envoyé à <strong id="otpEmail"></strong>. Saisissez-le ci-dessous.</p>
+      <div class="fld"><input class="otp-input" type="text" id="otpCode" inputmode="numeric" maxlength="6" placeholder="••••••"/></div>
+      <p class="msg" id="otpMsg"></p>
+      <button class="btn btn-primary btn-block" onclick="doVerify()">Confirmer →</button>
+      <p class="alt">Pas reçu ? <a onclick="doResend()">Renvoyer le code</a></p>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="vLogin" class="hidden">
+      <h2>Bon retour 👋</h2>
+      <p class="sub">Connectez-vous à votre espace.</p>
+      <button class="btn gbtn btn-block" onclick="doGoogle()">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuer avec Google
+      </button>
+      <div class="divider"><span>ou</span></div>
+      <div class="fld"><label>Email ou téléphone</label><input type="text" id="liEmail" placeholder="votre@email.com / +2126..." autocomplete="username"/></div>
+      <div class="fld"><label>Mot de passe</label>
+        <div class="pass-wrap"><input type="password" id="liPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignin()"/><button type="button" class="eye" onclick="eye('liPass',this)">👁</button></div>
+      </div>
+      <p class="msg" id="liMsg"></p>
+      <button class="btn btn-primary btn-block" onclick="doSignin()">Se connecter →</button>
+      <p class="alt"><a onclick="doForgot()" class="link">Mot de passe oublié ?</a></p>
+      <p class="alt">Nouveau ? <a onclick="showView('signup')">Créer un compte</a></p>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/landing.js"></script>
+</body>
+</html>
