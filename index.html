@@ -3,104 +3,167 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>CRM SYSTEM — Gérez votre agence en toute simplicité</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <title>CRM SYSTEM — Le futur de la gestion automobile</title>
+  <meta name="description" content="La plateforme tout-en-un, propulsée par l'intelligence, pour gérer réservations, véhicules et clients de votre agence de location. Entrez dans une nouvelle dimension."/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
   <style>
     :root{
-      --bg:#0e0e10; --bg2:#161618; --card:#1a1a1d; --border:rgba(255,255,255,.09);
-      --txt:#f4f4f5; --muted:#a1a1aa; --red:#e63329; --red2:#ff4d42; --green:#22c55e;
-      --radius:16px;
+      --bg:#06060a; --bg2:#0c0c12; --card:#101018; --border:rgba(255,255,255,.08);
+      --txt:#f4f4f5; --muted:#9a9aa8;
+      --red:#e63329; --red2:#ff4d42; --orange:#ff8a3d;
+      --cyan:#22d3ee; --violet:#7c5cff;
+      --radius:18px;
+      --grad:linear-gradient(120deg,#ff4d42,#ff8a3d 55%,#ffd166);
+      --grad2:linear-gradient(120deg,#7c5cff,#22d3ee);
     }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
-    .wrap{max-width:1140px;margin:0 auto;padding:0 22px}
-    .btn{display:inline-flex;align-items:center;gap:8px;border:none;border-radius:11px;padding:13px 22px;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:.15s}
-    .btn-primary{background:var(--red);color:#fff}
-    .btn-primary:hover{background:var(--red2)}
-    .btn-ghost{background:transparent;color:var(--txt);border:1px solid var(--border)}
-    .btn-ghost:hover{border-color:var(--red);color:var(--red2)}
+    .wrap{max-width:1180px;margin:0 auto;padding:0 22px;position:relative;z-index:2}
+
+    /* ===== animated background ===== */
+    .bg-fx{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+    .aurora{position:absolute;width:60vw;height:60vw;border-radius:50%;filter:blur(110px);opacity:.5;animation:drift 22s ease-in-out infinite}
+    .aurora.a1{background:radial-gradient(circle,#ff4d42,transparent 60%);top:-15vw;left:-10vw}
+    .aurora.a2{background:radial-gradient(circle,#7c5cff,transparent 60%);bottom:-20vw;right:-10vw;animation-delay:-7s}
+    .aurora.a3{background:radial-gradient(circle,#22d3ee,transparent 60%);top:30vh;left:40vw;opacity:.3;animation-delay:-14s}
+    @keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(6vw,4vh) scale(1.15)}66%{transform:translate(-5vw,-3vh) scale(.9)}}
+    .grid-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:54px 54px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,#000 40%,transparent 80%);animation:gridmove 20s linear infinite}
+    @keyframes gridmove{to{background-position:0 54px,54px 0}}
+    .particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--red2);box-shadow:0 0 8px var(--red2);opacity:.6;animation:rise linear infinite}
+    @keyframes rise{0%{transform:translateY(100vh) scale(0);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(-10vh) scale(1);opacity:0}}
+
+    /* ===== buttons ===== */
+    .btn{display:inline-flex;align-items:center;gap:9px;border:none;border-radius:12px;padding:14px 24px;font-family:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:.2s;position:relative}
+    .btn-primary{background:var(--grad);color:#1a0a06;box-shadow:0 8px 30px -8px rgba(255,77,66,.7)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 40px -8px rgba(255,77,66,.9)}
+    .btn-ghost{background:rgba(255,255,255,.04);color:var(--txt);border:1px solid var(--border);backdrop-filter:blur(8px)}
+    .btn-ghost:hover{border-color:var(--red2);color:var(--red2);transform:translateY(-2px)}
     .btn-block{width:100%;justify-content:center}
 
-    /* nav */
-    nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(12px);background:rgba(14,14,16,.78);border-bottom:1px solid var(--border)}
-    .nav-in{display:flex;align-items:center;justify-content:space-between;height:66px}
-    .logo{font-weight:900;font-size:1.25rem;letter-spacing:-.5px}
-    .logo span{color:var(--red2)}
+    /* ===== nav ===== */
+    nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(16px);background:rgba(6,6,10,.6);border-bottom:1px solid var(--border)}
+    .nav-in{display:flex;align-items:center;justify-content:space-between;height:70px}
+    .logo{font-family:'Space Grotesk';font-weight:700;font-size:1.3rem;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+    .logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .nav-cta{display:flex;gap:10px;align-items:center}
 
-    /* hero */
-    .hero{text-align:center;padding:90px 0 70px}
-    .hero .badge{display:inline-block;background:rgba(230,51,41,.12);color:var(--red2);border:1px solid rgba(230,51,41,.3);padding:6px 14px;border-radius:999px;font-size:.8rem;font-weight:600;margin-bottom:22px}
-    .hero h1{font-size:clamp(2.1rem,5vw,3.6rem);font-weight:900;letter-spacing:-1.5px;line-height:1.08;margin-bottom:20px}
-    .hero h1 em{font-style:normal;color:var(--red2)}
-    .hero p{font-size:clamp(1rem,2vw,1.2rem);color:var(--muted);max-width:620px;margin:0 auto 34px}
+    /* ===== hero ===== */
+    .hero{text-align:center;padding:96px 0 60px}
+    .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,77,66,.1);color:var(--red2);border:1px solid rgba(255,77,66,.28);padding:7px 16px;border-radius:999px;font-size:.8rem;font-weight:600;margin-bottom:26px;backdrop-filter:blur(8px)}
+    .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--red2);box-shadow:0 0 10px var(--red2);animation:blink 1.6s ease-in-out infinite}
+    @keyframes blink{50%{opacity:.3}}
+    .hero h1{font-family:'Space Grotesk';font-size:clamp(2.4rem,6.2vw,4.6rem);font-weight:700;letter-spacing:-2px;line-height:1.04;margin-bottom:24px}
+    .hero h1 .grad{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% auto;animation:shine 4s linear infinite}
+    @keyframes shine{to{background-position:200% center}}
+    .hero p.lead{font-size:clamp(1.05rem,2vw,1.28rem);color:var(--muted);max-width:660px;margin:0 auto 38px}
     .hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .trust{margin-top:30px;color:var(--muted);font-size:.82rem;display:flex;gap:22px;justify-content:center;flex-wrap:wrap}
+    .trust b{color:var(--txt)}
 
-    /* features */
-    .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;padding:30px 0 70px}
-    .feat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
-    .feat .ic{font-size:1.7rem;margin-bottom:12px}
-    .feat h3{font-size:1.05rem;margin-bottom:6px}
-    .feat p{color:var(--muted);font-size:.9rem}
+    /* ===== hero mockup ===== */
+    .mockup{margin:64px auto 0;max-width:920px;perspective:1600px}
+    .screen{background:linear-gradient(160deg,#12121c,#0a0a10);border:1px solid var(--border);border-radius:20px;padding:18px;box-shadow:0 40px 120px -30px rgba(124,92,255,.4),0 0 0 1px rgba(255,255,255,.03) inset;transform:rotateX(14deg);transform-origin:center top;animation:floaty 6s ease-in-out infinite;position:relative;overflow:hidden}
+    @keyframes floaty{50%{transform:rotateX(14deg) translateY(-12px)}}
+    .screen::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.07),transparent);animation:scan 5s ease-in-out infinite}
+    @keyframes scan{0%,60%{left:-60%}100%{left:130%}}
+    .dots{display:flex;gap:7px;margin-bottom:14px}
+    .dots i{width:11px;height:11px;border-radius:50%;background:#2a2a36;display:block}
+    .dots i:first-child{background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+    .dash{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+    .stat{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px}
+    .stat .k{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .stat .v{font-family:'Space Grotesk';font-size:1.5rem;font-weight:700;margin-top:4px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .bars{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;align-items:flex-end;gap:10px;height:150px}
+    .bars span{flex:1;background:var(--grad);border-radius:6px 6px 0 0;opacity:.85;animation:grow 2.4s ease-in-out infinite}
+    @keyframes grow{50%{transform:scaleY(.55)}}
+
+    /* ===== sections ===== */
+    section{position:relative;z-index:2}
+    .sec-head{text-align:center;max-width:680px;margin:0 auto 54px}
+    .eyebrow{font-size:.8rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;background:var(--grad2);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:14px}
+    .sec-head h2{font-family:'Space Grotesk';font-size:clamp(1.9rem,4vw,2.9rem);font-weight:700;letter-spacing:-1px;line-height:1.1;margin-bottom:14px}
+    .sec-head p{color:var(--muted);font-size:1.05rem}
+
+    .feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;padding:30px 0 90px}
+    .feat{background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:var(--radius);padding:28px;transition:.3s;position:relative;overflow:hidden}
+    .feat::before{content:"";position:absolute;inset:0;border-radius:var(--radius);padding:1px;background:var(--grad);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:0;transition:.3s}
+    .feat:hover{transform:translateY(-6px);background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02))}
+    .feat:hover::before{opacity:1}
+    .feat .ic{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:rgba(255,77,66,.12);border:1px solid rgba(255,77,66,.25);margin-bottom:16px}
+    .feat h3{font-family:'Space Grotesk';font-size:1.15rem;margin-bottom:8px}
+    .feat p{color:var(--muted);font-size:.92rem}
+
+    /* stats band */
+    .statband{padding:60px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:rgba(255,255,255,.015)}
+    .statband .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:30px;text-align:center}
+    .statband .num{font-family:'Space Grotesk';font-size:clamp(2.2rem,5vw,3.4rem);font-weight:700;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;line-height:1}
+    .statband .lbl{color:var(--muted);font-size:.9rem;margin-top:8px}
 
     /* plans */
-    .sec-head{text-align:center;margin-bottom:46px}
-    .sec-head h2{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;letter-spacing:-1px;margin-bottom:12px}
-    .sec-head p{color:var(--muted);font-size:1.05rem}
-    #plans{padding:40px 0 90px}
-    .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;align-items:stretch}
-    .plan{position:relative;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 26px;display:flex;flex-direction:column}
-    .plan.hot{border-color:var(--red);box-shadow:0 0 0 1px var(--red),0 20px 50px -20px rgba(230,51,41,.5)}
-    .plan .tag{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;font-size:.72rem;font-weight:700;padding:5px 14px;border-radius:999px;white-space:nowrap}
-    .plan h3{font-size:1.3rem;font-weight:800;margin-bottom:6px}
-    .plan .desc{color:var(--muted);font-size:.88rem;margin-bottom:20px;min-height:38px}
-    .plan .price{font-size:2.5rem;font-weight:900;letter-spacing:-1px}
+    #plans{padding:90px 0}
+    .plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:24px;align-items:stretch}
+    .plan{position:relative;background:linear-gradient(160deg,rgba(255,255,255,.04),rgba(255,255,255,.01));border:1px solid var(--border);border-radius:var(--radius);padding:34px 28px;display:flex;flex-direction:column;transition:.3s}
+    .plan:hover{transform:translateY(-6px)}
+    .plan.hot{border-color:transparent;box-shadow:0 0 0 1.5px var(--red2),0 24px 60px -24px rgba(255,77,66,.6);background:linear-gradient(160deg,rgba(255,77,66,.08),rgba(255,255,255,.01))}
+    .plan .tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--grad);color:#1a0a06;font-size:.72rem;font-weight:800;padding:6px 16px;border-radius:999px;white-space:nowrap;box-shadow:0 8px 24px -6px rgba(255,77,66,.8)}
+    .plan h3{font-family:'Space Grotesk';font-size:1.4rem;font-weight:700;margin-bottom:6px}
+    .plan .desc{color:var(--muted);font-size:.88rem;margin-bottom:22px;min-height:40px}
+    .plan .price{font-family:'Space Grotesk';font-size:2.7rem;font-weight:700;letter-spacing:-1px}
     .plan .price small{font-size:.95rem;font-weight:500;color:var(--muted)}
-    .plan ul{list-style:none;margin:22px 0 26px;display:flex;flex-direction:column;gap:11px}
+    .plan ul{list-style:none;margin:22px 0 28px;display:flex;flex-direction:column;gap:12px}
     .plan li{display:flex;gap:10px;font-size:.92rem;color:#d4d4d8}
-    .plan li::before{content:"✓";color:var(--green);font-weight:800}
+    .plan li::before{content:"✦";color:var(--red2);font-weight:800}
     .plan .btn{margin-top:auto}
 
-    footer{border-top:1px solid var(--border);padding:34px 0;text-align:center;color:var(--muted);font-size:.85rem}
+    /* final cta */
+    .cta-band{margin:30px 0 90px;text-align:center;padding:70px 30px;border-radius:28px;position:relative;overflow:hidden;border:1px solid var(--border);background:linear-gradient(160deg,rgba(124,92,255,.12),rgba(255,77,66,.1))}
+    .cta-band h2{font-family:'Space Grotesk';font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;letter-spacing:-1px;margin-bottom:16px}
+    .cta-band p{color:var(--muted);max-width:520px;margin:0 auto 28px}
 
-    /* auth modal */
-    .ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
-    .ov.open{display:flex}
-    .auth{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:430px;max-width:100%;padding:34px;position:relative}
+    footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--muted);font-size:.85rem}
+
+    /* scroll reveal */
+    .reveal{opacity:0;transform:translateY(34px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+    .reveal.in{opacity:1;transform:none}
+
+    @media(max-width:600px){.hero{padding:60px 0 40px}.screen{transform:none}.dash{grid-template-columns:repeat(2,1fr)}.trust{gap:14px}}
+
+    /* ===== AUTH MODAL (do not change IDs/classes — used by js/landing.js) ===== */
+    .ov{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+    .ov.open{display:flex;animation:ovin .25s ease}
+    @keyframes ovin{from{opacity:0}to{opacity:1}}
+    .auth{background:linear-gradient(160deg,#13131c,#0b0b12);border:1px solid var(--border);border-radius:22px;width:440px;max-width:100%;padding:36px;position:relative;box-shadow:0 40px 120px -30px rgba(124,92,255,.5);animation:authin .3s cubic-bezier(.2,.8,.2,1)}
+    @keyframes authin{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
     .auth .x{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer}
-    .auth h2{font-size:1.45rem;font-weight:800;margin-bottom:6px}
+    .auth .x:hover{color:var(--txt)}
+    .auth h2{font-family:'Space Grotesk';font-size:1.5rem;font-weight:700;margin-bottom:6px}
     .auth .sub{color:var(--muted);font-size:.9rem;margin-bottom:24px}
-    .auth .plan-chip{display:inline-block;background:rgba(230,51,41,.12);color:var(--red2);border:1px solid rgba(230,51,41,.3);font-size:.78rem;font-weight:600;padding:4px 12px;border-radius:999px;margin-bottom:18px}
+    .auth .plan-chip{display:inline-block;background:rgba(255,77,66,.12);color:var(--red2);border:1px solid rgba(255,77,66,.3);font-size:.78rem;font-weight:600;padding:5px 13px;border-radius:999px;margin-bottom:18px}
     .fld{margin-bottom:15px}
     .fld label{display:block;font-size:.83rem;font-weight:600;color:var(--muted);margin-bottom:7px}
-    .fld input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:13px 14px;color:var(--txt);font-family:inherit;font-size:.95rem;outline:none}
-    .fld input:focus{border-color:var(--red)}
+    .fld input{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--txt);font-family:inherit;font-size:.95rem;outline:none;transition:.2s}
+    .fld input:focus{border-color:var(--red2);box-shadow:0 0 0 3px rgba(255,77,66,.15)}
     .otp-input{text-align:center;letter-spacing:.5em;font-size:1.6rem!important;font-weight:800}
     .auth .msg{font-size:.86rem;margin:6px 0 14px;min-height:18px}
     .auth .msg.err{color:var(--red2)}
-    .auth .msg.ok{color:var(--green)}
+    .auth .msg.ok{color:#34d399}
     .auth .alt{text-align:center;font-size:.88rem;color:var(--muted);margin-top:18px}
     .auth .alt a{color:var(--red2);font-weight:600;cursor:pointer}
     .auth .link{color:var(--red2);font-weight:600;cursor:pointer;font-size:.84rem}
     .hidden{display:none!important}
-    /* method segmented toggle */
-    .seg{display:flex;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:18px}
-    .seg-btn{flex:1;background:transparent;border:none;color:var(--muted);font-family:inherit;font-weight:700;font-size:.9rem;padding:10px;border-radius:8px;cursor:pointer}
-    .seg-btn.active{background:var(--red);color:#fff}
-    /* password requirements */
     .pwreq{list-style:none;margin:8px 0 14px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
     .pwreq li{font-size:.78rem;color:var(--muted);display:flex;gap:6px;align-items:center}
     .pwreq li::before{content:"○";font-size:.7rem}
-    .pwreq li.ok{color:var(--green)}
+    .pwreq li.ok{color:#34d399}
     .pwreq li.ok::before{content:"✓"}
-    /* show/hide password */
     .pass-wrap{position:relative}
     .pass-wrap input{padding-right:46px}
     .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.05rem;opacity:.65;padding:6px}
     .eye:hover{opacity:1}
-    /* Google button + divider */
     .gbtn{gap:10px;background:#fff;color:#1f1f1f}
-    .gbtn:hover{background:#f1f1f1;color:#1f1f1f}
+    .gbtn:hover{background:#f1f1f1;color:#1f1f1f;transform:translateY(-2px)}
     .gbtn svg{width:18px;height:18px}
     .divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--muted);font-size:.78rem}
     .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--border)}
@@ -108,10 +171,17 @@
 </head>
 <body>
 
+<!-- animated background -->
+<div class="bg-fx">
+  <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
+  <div class="grid-fx"></div>
+  <div id="particles"></div>
+</div>
+
 <nav>
   <div class="wrap nav-in">
-    <div class="logo">🚗 <span>CRM</span> SYSTEM</div>
-    <div style="display:flex;gap:10px;align-items:center">
+    <div class="logo">🚗 <b>CRM</b>&nbsp;SYSTEM</div>
+    <div class="nav-cta">
       <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
       <button class="btn btn-primary" onclick="openAuth('signup')">S'inscrire</button>
     </div>
@@ -120,38 +190,99 @@
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge">🚀 La solution tout-en-un pour votre agence de location</span>
-    <h1>Gérez vos réservations,<br/>véhicules &amp; clients <em>en un seul endroit</em></h1>
-    <p>Réservations, factures, échéances d'assurance, statistiques et rappels WhatsApp — tout votre business automobile, automatisé et accessible partout.</p>
-    <div class="hero-cta">
+    <span class="badge reveal"><span class="dot"></span> Nouvelle génération de gestion automobile</span>
+    <h1 class="reveal">Votre agence de location<br/>entre dans <span class="grad">une autre dimension</span></h1>
+    <p class="lead reveal">Réservations, parc auto, échéances d'assurance, statistiques et rappels WhatsApp — toute votre agence pilotée depuis un seul cockpit intelligent, accessible partout, à chaque instant.</p>
+    <div class="hero-cta reveal">
       <button class="btn btn-primary" onclick="openAuth('signup')">Commencer gratuitement →</button>
-      <button class="btn btn-ghost" onclick="scrollToPlans()">Voir les offres</button>
-      <button class="btn btn-ghost" onclick="openAuth('login')">J'ai déjà un compte</button>
+      <button class="btn btn-ghost" onclick="scrollToPlans()">Découvrir les offres</button>
+    </div>
+    <div class="trust reveal">
+      <span>✦ <b>Gratuit</b> pour démarrer</span>
+      <span>✦ Sans carte bancaire</span>
+      <span>✦ Prêt en <b>30 secondes</b></span>
+    </div>
+
+    <!-- futuristic dashboard mockup -->
+    <div class="mockup reveal">
+      <div class="screen">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="dash">
+          <div class="stat"><div class="k">Réservations</div><div class="v">1 248</div></div>
+          <div class="stat"><div class="k">Revenus</div><div class="v">312k</div></div>
+          <div class="stat"><div class="k">Véhicules</div><div class="v">37</div></div>
+          <div class="stat"><div class="k">Taux occup.</div><div class="v">92%</div></div>
+        </div>
+        <div class="bars">
+          <span style="height:60%;animation-delay:0s"></span>
+          <span style="height:85%;animation-delay:.2s"></span>
+          <span style="height:45%;animation-delay:.4s"></span>
+          <span style="height:95%;animation-delay:.6s"></span>
+          <span style="height:70%;animation-delay:.8s"></span>
+          <span style="height:55%;animation-delay:1s"></span>
+          <span style="height:80%;animation-delay:1.2s"></span>
+          <span style="height:65%;animation-delay:1.4s"></span>
+          <span style="height:90%;animation-delay:1.6s"></span>
+        </div>
+      </div>
     </div>
   </div>
 </header>
 
-<section class="wrap">
-  <div class="feats">
-    <div class="feat"><div class="ic">📋</div><h3>Réservations</h3><p>Créez et suivez chaque réservation, paiements et statuts en temps réel.</p></div>
-    <div class="feat"><div class="ic">🚙</div><h3>Parc auto</h3><p>Gérez vos véhicules, assurances, visites techniques et vidanges.</p></div>
-    <div class="feat"><div class="ic">📊</div><h3>Statistiques</h3><p>Revenus, top véhicules et destinations — vos chiffres en un coup d'œil.</p></div>
-    <div class="feat"><div class="ic">🔔</div><h3>Rappels auto</h3><p>Alertes d'échéances et notifications WhatsApp automatiques.</p></div>
+<!-- stats band -->
+<section class="statband">
+  <div class="wrap">
+    <div class="grid">
+      <div class="reveal"><div class="num" data-count="99.9" data-suffix="%">0</div><div class="lbl">Disponibilité du cockpit</div></div>
+      <div class="reveal"><div class="num" data-count="30" data-suffix="s">0</div><div class="lbl">Pour créer votre compte</div></div>
+      <div class="reveal"><div class="num" data-count="100" data-suffix="%">0</div><div class="lbl">Données privées &amp; isolées</div></div>
+      <div class="reveal"><div class="num" data-count="24" data-suffix="/7">0</div><div class="lbl">Accessible partout</div></div>
+    </div>
   </div>
 </section>
 
+<!-- features -->
+<section>
+  <div class="wrap" style="padding-top:90px">
+    <div class="sec-head reveal">
+      <div class="eyebrow">Le cockpit complet</div>
+      <h2>Tout votre business automobile,<br/>automatisé et sous contrôle</h2>
+      <p>Une suite d'outils pensée pour les agences de location qui veulent aller plus vite, plus loin.</p>
+    </div>
+    <div class="feats">
+      <div class="feat reveal"><div class="ic">📋</div><h3>Réservations intelligentes</h3><p>Créez, suivez et filtrez chaque réservation, paiements et statuts en temps réel — zéro perte d'information.</p></div>
+      <div class="feat reveal"><div class="ic">🚙</div><h3>Parc auto vivant</h3><p>Véhicules, assurances, visites techniques et vidanges centralisés, avec alertes avant chaque échéance.</p></div>
+      <div class="feat reveal"><div class="ic">📊</div><h3>Statistiques en direct</h3><p>Revenus, top véhicules et destinations — vos chiffres clés visualisés en un clin d'œil.</p></div>
+      <div class="feat reveal"><div class="ic">🔔</div><h3>Rappels automatiques</h3><p>Notifications WhatsApp et alertes d'échéances déclenchées automatiquement. Vous n'oubliez plus rien.</p></div>
+      <div class="feat reveal"><div class="ic">🔒</div><h3>Cloud privé &amp; isolé</h3><p>Chaque compte possède son espace de données chiffré et totalement séparé. Vos clients restent vos clients.</p></div>
+      <div class="feat reveal"><div class="ic">📱</div><h3>Partout avec vous</h3><p>Téléphone, tablette ou ordinateur — synchronisé en temps réel sur tous vos appareils, instantanément.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- plans -->
 <section id="plans">
   <div class="wrap">
-    <div class="sec-head">
-      <h2>Des offres simples &amp; transparentes</h2>
-      <p>Choisissez le plan adapté à votre agence. Sans engagement.</p>
+    <div class="sec-head reveal">
+      <div class="eyebrow">Tarifs transparents</div>
+      <h2>Choisissez votre niveau de puissance</h2>
+      <p>Démarrez gratuitement, évoluez quand vous êtes prêt. Sans engagement, sans surprise.</p>
     </div>
     <div class="plan-grid" id="planGrid"></div>
   </div>
 </section>
 
+<!-- final CTA -->
+<section class="wrap">
+  <div class="cta-band reveal">
+    <h2>Prêt à propulser votre agence ?</h2>
+    <p>Rejoignez les agences qui ont déjà fait le saut vers une gestion plus simple, plus rapide, plus intelligente.</p>
+    <button class="btn btn-primary" onclick="openAuth('signup')">Créer mon compte gratuitement →</button>
+  </div>
+</section>
+
 <footer>
-  <div class="wrap">© <span id="yr"></span> CRM SYSTEM — Tous droits réservés.</div>
+  <div class="wrap">© <span id="yr"></span> CRM SYSTEM — Conçu pour les agences de location nouvelle génération.</div>
 </footer>
 
 <!-- ===== AUTH MODAL ===== -->
@@ -163,7 +294,7 @@
     <div id="vSignup">
       <span class="plan-chip hidden" id="signupPlan"></span>
       <h2>Créer votre compte</h2>
-      <p class="sub">Choisissez votre méthode d'inscription.</p>
+      <p class="sub">Lancez votre cockpit en quelques secondes.</p>
       <button class="btn gbtn btn-block" onclick="doGoogle()">
         <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continuer avec Google
@@ -201,7 +332,7 @@
     <!-- LOGIN -->
     <div id="vLogin" class="hidden">
       <h2>Bon retour 👋</h2>
-      <p class="sub">Connectez-vous à votre espace.</p>
+      <p class="sub">Reconnectez-vous à votre cockpit.</p>
       <button class="btn gbtn btn-block" onclick="doGoogle()">
         <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continuer avec Google
@@ -219,6 +350,27 @@
 
   </div>
 </div>
+
+<script>
+/* particles */
+(function(){
+  const p=document.getElementById('particles');
+  for(let i=0;i<18;i++){const d=document.createElement('div');d.className='particle';
+    d.style.left=Math.random()*100+'%';d.style.animationDuration=(8+Math.random()*10)+'s';
+    d.style.animationDelay=(-Math.random()*12)+'s';d.style.opacity=(.2+Math.random()*.5);
+    const c=['#ff4d42','#7c5cff','#22d3ee'][i%3];d.style.background=c;d.style.boxShadow='0 0 8px '+c;
+    p.appendChild(d);}
+})();
+/* scroll reveal */
+const _io=new IntersectionObserver((es)=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');_io.unobserve(e.target);}})},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>_io.observe(el));
+/* animated counters */
+const _co=new IntersectionObserver((es)=>{es.forEach(e=>{if(!e.isIntersecting)return;const el=e.target;_co.unobserve(el);
+  const target=parseFloat(el.dataset.count),suf=el.dataset.suffix||'',dec=(target%1!==0)?1:0;let s=null;
+  const step=(t)=>{if(!s)s=t;const p=Math.min((t-s)/1100,1);const v=(p*target).toFixed(dec);el.textContent=v+suf;if(p<1)requestAnimationFrame(step);};
+  requestAnimationFrame(step);})},{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el=>_co.observe(el));
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
