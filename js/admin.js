@@ -1069,16 +1069,17 @@ function showTab(tab, el) {
     document.getElementById('sidebar')?.classList.remove('open');
     document.getElementById('sidebarBackdrop')?.classList.remove('show');
   }
-  ['Dashboard','Clients','Reservations','Vehicles','Vidange','Stats','Settings'].forEach(t=>{
+  ['Dashboard','Clients','Reservations','Vehicles','Vidange','Stats','Account','Settings'].forEach(t=>{
     const el2 = document.getElementById('tab'+t);
     if (el2) el2.style.display = 'none';
   });
-  const map = {dashboard:'Dashboard',clients:'Clients',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',settings:'Settings'};
+  const map = {dashboard:'Dashboard',clients:'Clients',reservations:'Reservations',vehicles:'Vehicles',vidange:'Vidange',stats:'Stats',account:'Account',settings:'Settings'};
   const elTab = document.getElementById('tab' + map[tab]);
   if (elTab) elTab.style.display = 'block';
   window.currentAdminTab = tab;
   const L = PANEL_LANGS[localStorage.getItem('md_panel_lang') || 'fr'];
-  document.getElementById('pageTitle').textContent = L.titles[tab] || (tab==='settings'?'⚙️ Paramètres':(tab==='vehicles'?'🚙 Véhicules':(tab==='vidange'?'🛢️ Vidange':tab)));
+  document.getElementById('pageTitle').textContent = L.titles[tab] || (tab==='account'?'👤 Mon compte':(tab==='settings'?'⚙️ Paramètres':(tab==='vehicles'?'🚙 Véhicules':(tab==='vidange'?'🛢️ Vidange':tab))));
+  if (tab==='account') renderAccount();
   if (tab==='clients') renderClients();
   if (tab==='reservations') renderTable();
   if (tab==='vehicles') renderVehicles();
@@ -1558,12 +1559,43 @@ function renderSettings() {
   document.getElementById('set_agencyEmail').value   = s.agencyEmail  || '';
   document.getElementById('set_agencyAddress').value = s.agencyAddress|| '';
   document.getElementById('set_logoPreview').innerHTML = s.agencyLogo ? `<img src="${s.agencyLogo}" style="width:100%;height:100%;object-fit:cover"/>` : '🚗';
-  const c = authCreds();
-  document.getElementById('set_loginUser').value = c.user || '';
-  document.getElementById('set_loginPass').value = '';
-  document.getElementById('set_secQuestion').value = c.q || '';
-  document.getElementById('set_secAnswer').value    = c.a || '';
-  document.getElementById('settingsCredErr').textContent = '';
+}
+
+/* ===== ACCOUNT / SUBSCRIPTION (Supabase) ===== */
+function renderAccount() {
+  const u = (typeof SB_USER !== 'undefined' && SB_USER) ? SB_USER : null;
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  if (!u) { set('acc_email', '—'); return; }
+  const plan = (u.user_metadata && u.user_metadata.plan) || 'Starter';
+  const prov = (u.app_metadata && u.app_metadata.provider) || 'email';
+  const fmtD = d => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+  const fmtT = d => d ? new Date(d).toLocaleString('fr-FR') : '—';
+  set('acc_plan', plan);
+  set('acc_status', 'Actif ✅');
+  set('acc_since', fmtD(u.created_at));
+  set('acc_email', u.email || '—');
+  set('acc_provider', prov === 'google' ? '🔵 Google' : '📧 Email / mot de passe');
+  set('acc_last', fmtT(u.last_sign_in_at));
+  set('acc_id', u.id || '—');
+  const note = document.getElementById('acc_googleNote');
+  if (note) note.textContent = prov === 'google'
+    ? 'ℹ️ Vous êtes connecté via Google. Définir un mot de passe ici vous permettra aussi de vous connecter par email.'
+    : '';
+}
+async function changePassword() {
+  const p1 = document.getElementById('acc_newPass').value;
+  const p2 = document.getElementById('acc_newPass2').value;
+  const msg = document.getElementById('acc_passMsg');
+  const red = 'var(--red,#e11d2a)';
+  if (p1.length < 8) { msg.style.color = red; msg.textContent = '⚠️ Au moins 8 caractères.'; return; }
+  if (p1 !== p2) { msg.style.color = red; msg.textContent = '⚠️ Les mots de passe ne correspondent pas.'; return; }
+  msg.style.color = 'var(--muted)'; msg.textContent = '⏳ Mise à jour...';
+  const { error } = await SB.auth.updateUser({ password: p1 });
+  if (error) { msg.style.color = red; msg.textContent = '❌ ' + error.message; return; }
+  msg.style.color = 'var(--green)'; msg.textContent = '✅ Mot de passe mis à jour.';
+  document.getElementById('acc_newPass').value = '';
+  document.getElementById('acc_newPass2').value = '';
+  toast('🔑 Mot de passe mis à jour');
 }
 
 function onLogoFileChange(e) {

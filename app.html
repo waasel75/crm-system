@@ -11,6 +11,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    .acc-info{display:flex;flex-direction:column}
+    .acc-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)}
+    .acc-row:last-child{border-bottom:none}
+    .acc-row span{color:var(--muted);font-size:.85rem}
+    .acc-row b{font-weight:600;text-align:right;word-break:break-all}
+    .acc-badge{background:rgba(230,51,41,.14);color:#ff4d42;border:1px solid rgba(230,51,41,.3);padding:3px 12px;border-radius:999px;font-size:.82rem}
+  </style>
 </head>
 <body>
 
@@ -32,6 +40,7 @@
       <button class="sb-link" onclick="showTab('vehicles',this)"><span class="sb-icon">🚙</span><span class="sb-txt" data-pt="nav-vehicles">Véhicules</span></button>
       <button class="sb-link" onclick="showTab('vidange',this)"><span class="sb-icon">🛢️</span><span class="sb-txt" data-pt="nav-vidange">Vidange</span></button>
       <button class="sb-link" onclick="showTab('stats',this)"><span class="sb-icon">📊</span><span class="sb-txt" data-pt="nav-stats">Statistiques</span></button>
+      <button class="sb-link" onclick="showTab('account',this)"><span class="sb-icon">👤</span><span class="sb-txt">Mon compte</span></button>
       <button class="sb-link" onclick="showTab('settings',this)"><span class="sb-icon">⚙️</span><span class="sb-txt" data-pt="settings">Paramètres</span></button>
     </nav>
     <div class="sb-footer">
@@ -175,6 +184,37 @@
       </div>
     </div>
 
+    <!-- ===== TAB: ACCOUNT / SUBSCRIPTION ===== -->
+    <div id="tabAccount" class="tab-content" style="display:none">
+      <div class="dash-row">
+        <div class="dash-panel" style="flex:1;min-width:320px">
+          <div class="panel-header"><h3>💳 Mon abonnement</h3></div>
+          <div class="acc-info">
+            <div class="acc-row"><span>Plan</span><b id="acc_plan" class="acc-badge">—</b></div>
+            <div class="acc-row"><span>Statut</span><b id="acc_status">—</b></div>
+            <div class="acc-row"><span>Membre depuis</span><b id="acc_since">—</b></div>
+          </div>
+        </div>
+        <div class="dash-panel" style="flex:1;min-width:320px">
+          <div class="panel-header"><h3>👤 Informations du compte</h3></div>
+          <div class="acc-info">
+            <div class="acc-row"><span>Email</span><b id="acc_email">—</b></div>
+            <div class="acc-row"><span>Méthode de connexion</span><b id="acc_provider">—</b></div>
+            <div class="acc-row"><span>Dernière connexion</span><b id="acc_last">—</b></div>
+            <div class="acc-row"><span>ID compte</span><b id="acc_id" style="font-size:.7rem;font-weight:500;color:var(--muted)">—</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-panel" style="max-width:520px">
+        <div class="panel-header"><h3>🔐 Changer le mot de passe</h3></div>
+        <div class="form-group"><label>Nouveau mot de passe</label><input id="acc_newPass" type="password" placeholder="Au moins 8 caractères"/></div>
+        <div class="form-group"><label>Confirmer le mot de passe</label><input id="acc_newPass2" type="password" placeholder="Retapez le mot de passe"/></div>
+        <button class="btn-primary" onclick="changePassword()">🔑 Mettre à jour le mot de passe</button>
+        <p class="login-err" id="acc_passMsg" style="text-align:left"></p>
+        <p style="color:var(--muted);font-size:.78rem;margin-top:10px" id="acc_googleNote"></p>
+      </div>
+    </div>
+
     <!-- ===== TAB: SETTINGS ===== -->
     <div id="tabSettings" class="tab-content" style="display:none">
 
@@ -210,19 +250,10 @@
         </div>
 
         <div class="dash-panel" style="flex:1;min-width:320px">
-          <div class="panel-header"><h3 data-pt="set-creds-t">🔐 Identifiants de connexion</h3></div>
-          <div class="form-group"><label data-pt="set-newuser">Nouvel identifiant</label><input id="set_loginUser" type="text" placeholder="Identifiant"/></div>
-          <div class="form-group"><label data-pt="set-newpass">Nouveau mot de passe</label><input id="set_loginPass" type="password" data-pt-ph="set-newpass-ph" placeholder="Laisser vide pour ne pas changer"/></div>
-          <button class="btn-primary" style="margin-top:6px" data-pt="set-creds-save" onclick="saveCredentials()">🔑 Mettre à jour les identifiants</button>
-          <p class="login-err" id="settingsCredErr" style="text-align:left;color:var(--green)"></p>
+          <div class="panel-header"><h3>🔐 Compte &amp; mot de passe</h3></div>
+          <p style="color:var(--muted);font-size:.84rem;line-height:1.6">Votre email, votre abonnement et le changement de mot de passe se trouvent désormais dans la section <b>👤 Mon compte</b>.</p>
+          <button class="btn-primary" style="margin-top:10px" onclick="showTab('account',document.querySelectorAll('.sb-link')[6])">👤 Aller à Mon compte</button>
         </div>
-      </div>
-
-      <div class="dash-panel">
-        <div class="panel-header"><h3 data-pt="set-secq-t">❓ Question de sécurité (récupération mot de passe)</h3></div>
-        <div class="form-group"><label data-pt="set-question">Question</label><input id="set_secQuestion" type="text" placeholder="Ex: Date de naissance"/></div>
-        <div class="form-group"><label data-pt="set-answer">Réponse</label><input id="set_secAnswer" type="text" placeholder="Réponse attendue"/></div>
-        <button class="btn-primary" style="max-width:280px" data-pt="set-secq-save" onclick="saveSecurityQuestion()">💾 Enregistrer la question</button>
       </div>
 
       <div class="dash-panel">
