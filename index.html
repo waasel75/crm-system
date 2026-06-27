@@ -111,7 +111,10 @@
 <nav>
   <div class="wrap nav-in">
     <div class="logo">🚗 <span>CRM</span> SYSTEM</div>
-    <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
+      <button class="btn btn-primary" onclick="openAuth('signup')">S'inscrire</button>
+    </div>
   </div>
 </nav>
 
@@ -121,7 +124,8 @@
     <h1>Gérez vos réservations,<br/>véhicules &amp; clients <em>en un seul endroit</em></h1>
     <p>Réservations, factures, échéances d'assurance, statistiques et rappels WhatsApp — tout votre business automobile, automatisé et accessible partout.</p>
     <div class="hero-cta">
-      <button class="btn btn-primary" onclick="scrollToPlans()">Voir les offres →</button>
+      <button class="btn btn-primary" onclick="openAuth('signup')">Commencer gratuitement →</button>
+      <button class="btn btn-ghost" onclick="scrollToPlans()">Voir les offres</button>
       <button class="btn btn-ghost" onclick="openAuth('login')">J'ai déjà un compte</button>
     </div>
   </div>
