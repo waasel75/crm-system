@@ -59,23 +59,9 @@ function renderPlans() {
 
 function scrollToPlans() { document.getElementById('plans').scrollIntoView({ behavior: 'smooth' }); }
 
-/* ---- signup method (email | phone) + password strength ---- */
-let _method = 'email';
-let _pending = null; // { type:'email'|'phone', id }
+/* ---- password strength ---- */
+let _pending = null; // { id } (email)
 
-function setMethod(m) {
-  _method = m;
-  document.querySelectorAll('#suMethod .seg-btn').forEach(b => b.classList.toggle('active', b.dataset.m === m));
-  document.getElementById('fldEmail').classList.toggle('hidden', m !== 'email');
-  document.getElementById('fldPhone').classList.toggle('hidden', m !== 'phone');
-}
-// Normalize to E.164 (Morocco default) for Supabase phone auth.
-function normPhone(p) {
-  p = (p || '').replace(/[\s.\-()]/g, '');
-  if (p.startsWith('00')) p = '+' + p.slice(2);
-  if (p.startsWith('0')) p = '+212' + p.slice(1);
-  return p;
-}
 // Strong password, same rules as major platforms.
 function pwRules(p) {
   return { len: p.length >= 8, upper: /[A-Z]/.test(p), lower: /[a-z]/.test(p), num: /\d/.test(p), sym: /[^A-Za-z0-9]/.test(p) };
@@ -92,7 +78,6 @@ function openAuth(view, plan) {
   const chip = document.getElementById('signupPlan');
   if (plan) { chip.textContent = 'Plan choisi : ' + plan; chip.classList.remove('hidden'); }
   else chip.classList.add('hidden');
-  setMethod('email');
   showView(view || 'signup');
 }
 function closeAuth() { document.getElementById('authOv').classList.remove('open'); }
@@ -120,7 +105,7 @@ async function doGoogle() {
   if (error) setMsg('suMsg', '❌ ' + error.message);
 }
 
-/* ---- signup (email or phone) ---- */
+/* ---- signup (email + password) ---- */
 async function doSignup() {
   const pass = document.getElementById('suPass').value;
   const pass2 = document.getElementById('suPass2').value;
@@ -128,66 +113,53 @@ async function doSignup() {
   if (!pwCheck(pass)) return setMsg('suMsg', '⚠️ Mot de passe trop faible : respectez les 5 règles ci-dessus.');
   if (pass !== pass2) return setMsg('suMsg', '⚠️ Les deux mots de passe ne correspondent pas.');
 
-  let creds, target;
-  if (_method === 'email') {
-    const email = document.getElementById('suEmail').value.trim();
-    if (!email) return setMsg('suMsg', '⚠️ Email requis.');
-    creds = { email, password: pass, options: { data: { plan }, emailRedirectTo: location.origin + location.pathname.replace(/[^/]*$/, '') + APP_URL } };
-    target = email; _pending = { type: 'email', id: email };
-  } else {
-    const phone = normPhone(document.getElementById('suPhone').value);
-    if (phone.length < 8) return setMsg('suMsg', '⚠️ Numéro de téléphone invalide (ex: +2126…).');
-    creds = { phone, password: pass, options: { data: { plan } } };
-    target = phone; _pending = { type: 'phone', id: phone };
-  }
+  const email = document.getElementById('suEmail').value.trim();
+  if (!email) return setMsg('suMsg', '⚠️ Email requis.');
+  const creds = { email, password: pass, options: { data: { plan }, emailRedirectTo: location.origin + location.pathname.replace(/[^/]*$/, '') + APP_URL } };
+  _pending = { id: email };
+
   setMsg('suMsg', '⏳ Création du compte...', true);
   const { data, error } = await SB.auth.signUp(creds);
   if (error) return setMsg('suMsg', '❌ ' + error.message);
   if (data.session) return location.replace(APP_URL);     // confirmation disabled -> straight in
-  document.getElementById('otpEmail').textContent = target;
+  // confirmation enabled (optional) -> show the 6-digit code view
+  document.getElementById('otpEmail').textContent = email;
   showView('otp');
-  setMsg('otpMsg', _method === 'email' ? '📧 Code envoyé à votre email.' : '📱 Code envoyé par SMS.', true);
+  setMsg('otpMsg', '📧 Code envoyé à votre email.', true);
 }
 
-/* ---- verify the 6-digit code (email or SMS) ---- */
-async function _verify(token) {
-  if (_pending.type === 'phone') return SB.auth.verifyOtp({ phone: _pending.id, token, type: 'sms' });
-  let r = await SB.auth.verifyOtp({ email: _pending.id, token, type: 'signup' });
-  if (r.error) r = await SB.auth.verifyOtp({ email: _pending.id, token, type: 'email' });
-  return r;
-}
+/* ---- verify the 6-digit email code (only if confirmation is enabled) ---- */
 async function doVerify() {
   const token = document.getElementById('otpCode').value.trim();
   if (token.length < 6) return setMsg('otpMsg', '⚠️ Saisissez le code à 6 chiffres.');
   setMsg('otpMsg', '⏳ Vérification...', true);
-  const { error } = await _verify(token);
-  if (error) return setMsg('otpMsg', '❌ Code invalide ou expiré.');
+  let r = await SB.auth.verifyOtp({ email: _pending.id, token, type: 'signup' });
+  if (r.error) r = await SB.auth.verifyOtp({ email: _pending.id, token, type: 'email' });
+  if (r.error) return setMsg('otpMsg', '❌ Code invalide ou expiré.');
   location.replace(APP_URL);
 }
 async function doResend() {
   if (!_pending) return;
-  const opts = _pending.type === 'phone' ? { type: 'sms', phone: _pending.id } : { type: 'signup', email: _pending.id };
-  const { error } = await SB.auth.resend(opts);
+  const { error } = await SB.auth.resend({ type: 'signup', email: _pending.id });
   setMsg('otpMsg', error ? '❌ ' + error.message : '📨 Nouveau code envoyé.', !error);
 }
 
-/* ---- login (email or phone) ---- */
+/* ---- login (email + password) ---- */
 async function doSignin() {
   const id = document.getElementById('liEmail').value.trim();
   const pass = document.getElementById('liPass').value;
   if (!id || !pass) return setMsg('liMsg', '⚠️ Identifiant et mot de passe requis.');
-  const isEmail = id.includes('@');
   setMsg('liMsg', '⏳ Connexion...', true);
-  const { error } = await SB.auth.signInWithPassword(isEmail ? { email: id, password: pass } : { phone: normPhone(id), password: pass });
+  const { error } = await SB.auth.signInWithPassword({ email: id, password: pass });
   if (!error) return location.replace(APP_URL);
   if (/confirm/i.test(error.message)) {           // account not confirmed yet
-    _pending = isEmail ? { type: 'email', id } : { type: 'phone', id: normPhone(id) };
-    document.getElementById('otpEmail').textContent = _pending.id;
+    _pending = { id };
+    document.getElementById('otpEmail').textContent = id;
     showView('otp');
     await doResend();
     return setMsg('otpMsg', '⚠️ Compte non confirmé. Nouveau code envoyé.', true);
   }
-  setMsg('liMsg', '❌ Identifiant ou mot de passe incorrect.');
+  setMsg('liMsg', '❌ Email ou mot de passe incorrect.');
 }
 async function doForgot() {
   const id = document.getElementById('liEmail').value.trim();

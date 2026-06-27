@@ -165,12 +165,7 @@
         Continuer avec Google
       </button>
       <div class="divider"><span>ou</span></div>
-      <div class="seg" id="suMethod">
-        <button class="seg-btn active" data-m="email" onclick="setMethod('email')">📧 Email</button>
-        <button class="seg-btn" data-m="phone" onclick="setMethod('phone')">📱 Téléphone</button>
-      </div>
       <div class="fld" id="fldEmail"><label>Email</label><input type="email" id="suEmail" placeholder="votre@email.com" autocomplete="email"/></div>
-      <div class="fld hidden" id="fldPhone"><label>Téléphone</label><input type="tel" id="suPhone" placeholder="+212 6 12 34 56 78" autocomplete="tel"/></div>
       <div class="fld"><label>Mot de passe</label>
         <div class="pass-wrap"><input type="password" id="suPass" placeholder="Mot de passe fort" autocomplete="new-password" oninput="pwCheck(this.value)"/><button type="button" class="eye" onclick="eye('suPass',this)">👁</button></div>
       </div>
@@ -208,7 +203,7 @@
         Continuer avec Google
       </button>
       <div class="divider"><span>ou</span></div>
-      <div class="fld"><label>Email ou téléphone</label><input type="text" id="liEmail" placeholder="votre@email.com / +2126..." autocomplete="username"/></div>
+      <div class="fld"><label>Email</label><input type="email" id="liEmail" placeholder="votre@email.com" autocomplete="username"/></div>
       <div class="fld"><label>Mot de passe</label>
         <div class="pass-wrap"><input type="password" id="liPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doSignin()"/><button type="button" class="eye" onclick="eye('liPass',this)">👁</button></div>
       </div>
