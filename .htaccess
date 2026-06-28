@@ -1,0 +1,11 @@
+# Always revalidate HTML so deploys show up immediately (no stale CDN/browser cache).
+<FilesMatch "\.(html)$">
+  Header set Cache-Control "no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
+
+# JS/CSS are cache-busted with ?v= in the HTML, so they can be cached safely.
+<FilesMatch "\.(js|css)$">
+  Header set Cache-Control "public, max-age=86400"
+</FilesMatch>
