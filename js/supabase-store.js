@@ -100,7 +100,13 @@ async function sbEnterApp() {
   sessionStorage.setItem('md_admin', '1');
   const app = document.getElementById('app');
   if (app) app.style.display = 'flex';
-  if (AG) { const b = document.getElementById('backToAgencies'); if (b) b.style.display = 'inline-flex'; }
+  if (AG) {
+    const b = document.getElementById('backToAgencies'); if (b) b.style.display = 'inline-flex';
+    let list; try { list = JSON.parse(_rawGet('md_agencies') || '[]'); } catch { list = []; }
+    const ag = list.find(a => a.id === AG);
+    const el = document.getElementById('agencyName');
+    if (el && ag) { el.textContent = '🏢 ' + ag.name; el.style.display = 'inline-flex'; document.title = ag.name + ' — CRM'; }
+  }
   if (typeof init === 'function') init();
   sbStartRealtime();
 }
