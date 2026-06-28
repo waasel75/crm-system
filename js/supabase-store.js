@@ -3,16 +3,29 @@
    SUPABASE DATA LAYER (app.html)
    - Gates the CRM: no valid session -> redirect to the landing page.
    - Each account has a PRIVATE namespace in public.kv_store (RLS-isolated).
-   - Mirrors the app's existing md_* localStorage keys to/from Supabase,
-     so the rest of the app keeps working unchanged.
-   Auth (signup / login / OTP) lives on the landing page: js/landing.js.
+   - Mirrors the app's md_* localStorage keys to/from Supabase.
+
+   MULTI-AGENCY (Business plan only):
+   - The Business plan uses a SEPARATE panel (business.html) to manage agencies.
+   - An agency's system is just app.html opened as  app.html?agency=<id> .
+     In that mode every DATA key is transparently namespaced to that agency
+     (md_AG_<id>__<key>) so each agency keeps 100% isolated data — the rest of
+     the app code stays exactly the same.
+   - Free / Pro plans: no agency param -> behaves exactly like before.
+   Auth (signup / login) lives on the landing page: js/landing.js.
    ========================================================================= */
 
 const SB = supabase.createClient(SUPA.url, SUPA.anonKey);
 const SB_LANDING = 'index.html';
 
-/* Keys that belong to the user's cloud namespace: everything under md_*
-   except legacy local-only auth keys and the per-device language choice. */
+/* ---- agency scope ---- */
+const AG = new URLSearchParams(location.search).get('agency') || '';
+// Keys that must stay GLOBAL (never scoped to an agency).
+const SB_CONTROL = new Set(['md_admin', 'md_admin_creds', 'md_admin_lockout', 'md_panel_lang', 'md_agencies']);
+function sbIsData(k) { return typeof k === 'string' && k.startsWith('md_') && !k.startsWith('md_AG_') && !SB_CONTROL.has(k); }
+function phys(k) { return (AG && sbIsData(k)) ? ('md_AG_' + AG + '__' + k) : k; }
+
+/* ---- which keys sync to the cloud ---- */
 const SB_LOCAL_ONLY = new Set(['md_admin_creds', 'md_admin_lockout', 'md_panel_lang']);
 function sbIsSyncedKey(k) { return typeof k === 'string' && k.startsWith('md_') && !SB_LOCAL_ONLY.has(k); }
 
@@ -20,24 +33,6 @@ let SB_USER = null;
 const _rawSet = localStorage.setItem.bind(localStorage);
 const _rawGet = localStorage.getItem.bind(localStorage);
 const _rawRemove = localStorage.removeItem.bind(localStorage);
-
-/* =======================================================================
-   MULTI-AGENCY (Business plan only)
-   - Business accounts can hold UNLIMITED agencies inside one login.
-   - Each agency's data is transparently namespaced: a logical key like
-     `md_reservations` is physically stored as `md_AG_<agencyId>__md_reservations`.
-   - The rest of the app keeps using logical keys unchanged.
-   - Non-Business plans: AG_ACTIVE stays null -> zero behavior change.
-   ======================================================================= */
-const AG_CONTROL = new Set(['md_panel_lang','md_admin','md_admin_creds','md_admin_lockout','md_agencies','md_active_agency','md_wa_notify','md_ech_alerted']);
-let AG_IS_BUSINESS = false;
-let AG_ACTIVE = null;
-function agKey(k) {
-  if (!AG_ACTIVE) return k;
-  if (typeof k !== 'string' || !k.startsWith('md_') || k.startsWith('md_AG_') || AG_CONTROL.has(k)) return k;
-  return 'md_AG_' + AG_ACTIVE + '__' + k;
-}
-function agData(id, key) { try { return JSON.parse(_rawGet('md_AG_' + id + '__' + key) || 'null'); } catch { return null; } }
 
 /* ---- write mirror: app -> Supabase (debounced per key) ---- */
 const _sbPending = new Map();
@@ -58,42 +53,16 @@ async function sbFlush() {
   if (error) console.warn('[supabase] sync failed', error.message);
 }
 
-// Wrap localStorage: translate logical->physical (per active agency), persist
-// locally, and mirror md_* writes to the cloud under the physical key.
+/* Transparently scope (agency) + mirror to cloud. The app keeps using md_* keys. */
 localStorage.setItem = function (key, val) {
-  const pk = agKey(key);
-  _rawSet(pk, val);
-  if (sbIsSyncedKey(pk)) sbQueueUpsert(pk, val);
+  const p = phys(key);
+  _rawSet(p, val);
+  if (sbIsSyncedKey(p)) sbQueueUpsert(p, val);
 };
-localStorage.getItem = function (key) { return _rawGet(agKey(key)); };
-localStorage.removeItem = function (key) { _rawRemove(agKey(key)); };
+localStorage.getItem = function (key) { return _rawGet(phys(key)); };
+localStorage.removeItem = function (key) { _rawRemove(phys(key)); };
 
-/* ---- agency setup: decide plan, list, active agency (+ first-time migration) ---- */
-function setupAgencies() {
-  const plan = (SB_USER && SB_USER.user_metadata && SB_USER.user_metadata.plan) || 'Starter';
-  AG_IS_BUSINESS = (plan === 'Business');
-  if (!AG_IS_BUSINESS) { AG_ACTIVE = null; return; }
-  let list; try { list = JSON.parse(_rawGet('md_agencies') || '[]'); } catch { list = []; }
-  if (!Array.isArray(list) || list.length === 0) {
-    // First Business boot: create a default agency and migrate existing data into it.
-    const id = Date.now().toString(36);
-    list = [{ id, name: 'Agence principale', created: Date.now() }];
-    ['md_reservations', 'md_vehicles', 'md_site_settings', 'md_vidange_alerted'].forEach(k => {
-      const v = _rawGet(k);
-      if (v != null) { const pk = 'md_AG_' + id + '__' + k; _rawSet(pk, v); sbQueueUpsert(pk, v); }
-    });
-    _rawSet('md_agencies', JSON.stringify(list)); sbQueueUpsert('md_agencies', JSON.stringify(list));
-    _rawSet('md_active_agency', id); sbQueueUpsert('md_active_agency', id);
-    AG_ACTIVE = id; sbFlush();
-  } else {
-    AG_ACTIVE = _rawGet('md_active_agency');
-    if (!AG_ACTIVE || !list.some(a => a.id === AG_ACTIVE)) {
-      AG_ACTIVE = list[0].id; _rawSet('md_active_agency', AG_ACTIVE); sbQueueUpsert('md_active_agency', AG_ACTIVE);
-    }
-  }
-}
-
-/* ---- read pull: Supabase -> localStorage ---- */
+/* ---- read pull: Supabase -> localStorage (physical keys) ---- */
 async function sbPullAll() {
   const { data, error } = await SB.from('kv_store').select('key,value');
   if (error) { console.warn('[supabase] pull failed', error.message); return; }
@@ -103,7 +72,7 @@ async function sbPullAll() {
   }
 }
 
-/* ---- realtime: cross-device updates for THIS user only ---- */
+/* ---- realtime: cross-device updates for THIS user only (row.key is physical) ---- */
 function sbStartRealtime() {
   if (!SB_USER) return;
   SB.channel('kv_' + SB_USER.id)
@@ -113,11 +82,11 @@ function sbStartRealtime() {
         const row = payload.new || payload.old;
         if (!row) return;
         if (payload.eventType === 'DELETE') {
-          if (localStorage.getItem(row.key) === null) return; // already gone -> skip echo
+          if (_rawGet(row.key) === null) return;
           _rawRemove(row.key);
         } else {
           const v = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
-          if (localStorage.getItem(row.key) === v) return;     // unchanged -> skip self-echo
+          if (_rawGet(row.key) === v) return;          // unchanged -> skip self-echo
           _rawSet(row.key, v);
         }
         window.dispatchEvent(new Event('db-synced'));
@@ -128,16 +97,15 @@ function sbStartRealtime() {
 /* ---- boot the CRM once a valid session is confirmed ---- */
 async function sbEnterApp() {
   await sbPullAll();
-  setupAgencies();
-  if (typeof applyAgencyUI === 'function') applyAgencyUI();
   sessionStorage.setItem('md_admin', '1');
   const app = document.getElementById('app');
   if (app) app.style.display = 'flex';
+  if (AG) { const b = document.getElementById('backToAgencies'); if (b) b.style.display = 'inline-flex'; }
   if (typeof init === 'function') init();
   sbStartRealtime();
 }
 
-// Logout button in the sidebar -> end session and return to landing.
+// Logout -> end session and return to landing.
 async function doLogout() {
   await SB.auth.signOut();
   sessionStorage.removeItem('md_admin');
@@ -145,9 +113,15 @@ async function doLogout() {
   location.replace(SB_LANDING);
 }
 
-/* ---- gate: require a session, else go to the landing page ---- */
+/* ---- gate ----
+   - no session            -> landing
+   - Business + no agency   -> the dedicated multi-agency panel (business.html)
+   - otherwise              -> the normal CRM (optionally scoped to ?agency=) */
 (async function () {
   const { data } = await SB.auth.getSession();
-  if (data.session) { SB_USER = data.session.user; await sbEnterApp(); }
-  else { location.replace(SB_LANDING); }
+  if (!data.session) { location.replace(SB_LANDING); return; }
+  SB_USER = data.session.user;
+  const plan = (SB_USER.user_metadata && SB_USER.user_metadata.plan) || '';
+  if (plan === 'Business' && !AG) { location.replace('business.html'); return; }
+  await sbEnterApp();
 })();

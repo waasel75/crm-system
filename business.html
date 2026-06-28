@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mes agences — Business</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0a0a14;color:#e8e8f0;min-height:100vh}
+    .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 64px}
+    header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:8px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#7c5cff,#4a2fd6);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+    h1{font-size:1.4rem;font-weight:800}
+    .sub{color:#9a9ab5;font-size:.9rem;margin-top:2px}
+    .logout{background:rgba(255,255,255,.06);color:#c8c8e0;border:1px solid rgba(255,255,255,.12);padding:9px 16px;border-radius:10px;font-weight:600;cursor:pointer;font-size:.85rem}
+    .logout:hover{background:rgba(255,255,255,.1)}
+    .add{display:flex;gap:10px;margin:28px 0;flex-wrap:wrap}
+    .add input{flex:1;min-width:200px;background:rgba(255,255,255,.05);border:1px solid rgba(124,92,255,.25);color:#fff;padding:13px 16px;border-radius:12px;font-size:.95rem;outline:none}
+    .add input:focus{border-color:#7c5cff}
+    .add button{background:linear-gradient(135deg,#7c5cff,#5a3fe0);color:#fff;border:none;padding:13px 24px;border-radius:12px;font-weight:700;cursor:pointer;font-size:.95rem;white-space:nowrap}
+    .add button:hover{filter:brightness(1.1)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+    .card{background:linear-gradient(160deg,rgba(124,92,255,.1),rgba(255,255,255,.03));border:1px solid rgba(124,92,255,.22);border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px;transition:.15s}
+    .card:hover{border-color:rgba(124,92,255,.5);transform:translateY(-2px)}
+    .card .icon{font-size:1.8rem}
+    .card .name{font-size:1.15rem;font-weight:800;word-break:break-word}
+    .card .meta{color:#8a8aa5;font-size:.78rem}
+    .card .actions{display:flex;gap:8px;margin-top:auto}
+    .card .open{flex:1;background:linear-gradient(135deg,#7c5cff,#5a3fe0);color:#fff;border:none;padding:11px;border-radius:10px;font-weight:700;cursor:pointer;font-size:.9rem}
+    .card .open:hover{filter:brightness(1.1)}
+    .icon-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#c8c8e0;width:40px;border-radius:10px;cursor:pointer;font-size:.95rem}
+    .icon-btn:hover{background:rgba(255,255,255,.12)}
+    .icon-btn.danger:hover{background:rgba(255,80,80,.18);border-color:rgba(255,80,80,.4);color:#ff8a8a}
+    .empty{text-align:center;color:#8a8aa5;padding:60px 20px;border:1px dashed rgba(124,92,255,.25);border-radius:18px}
+    .empty .big{font-size:2.4rem;margin-bottom:10px}
+    .loading{text-align:center;color:#8a8aa5;padding:80px 20px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">🏢</div>
+        <div>
+          <h1>Mes agences</h1>
+          <div class="sub">Plan Business — chaque agence a son propre système isolé.</div>
+        </div>
+      </div>
+      <button class="logout" onclick="doLogout()">Déconnexion</button>
+    </header>
+
+    <div class="add">
+      <input id="agName" type="text" placeholder="Nom de la nouvelle agence…" maxlength="60" onkeydown="if(event.key==='Enter')addAgency()"/>
+      <button onclick="addAgency()">+ Ajouter une agence</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="loading" class="loading">Chargement…</div>
+  </div>
+
+  <script>
+    'use strict';
+    const SB = supabase.createClient(SUPA.url, SUPA.anonKey);
+    const KEY = 'md_agencies';
+    let USER = null, AGENCIES = [];
+
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+    async function save() {
+      localStorage.setItem(KEY, JSON.stringify(AGENCIES));
+      await SB.from('kv_store').upsert(
+        { user_id: USER.id, key: KEY, value: AGENCIES, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,key' }
+      );
+    }
+
+    function render() {
+      const grid = document.getElementById('grid');
+      if (!AGENCIES.length) {
+        grid.innerHTML = '<div class="empty"><div class="big">🏢</div>Aucune agence pour l\'instant.<br>Créez votre première agence ci-dessus.</div>';
+        return;
+      }
+      grid.innerHTML = AGENCIES.map(a => `
+        <div class="card">
+          <div class="icon">🏢</div>
+          <div class="name">${esc(a.name)}</div>
+          <div class="meta">Créée le ${new Date(a.created).toLocaleDateString('fr-FR')}</div>
+          <div class="actions">
+            <button class="open" onclick="openAgency('${a.id}')">Ouvrir →</button>
+            <button class="icon-btn" title="Renommer" onclick="renameAgency('${a.id}')">✎</button>
+            <button class="icon-btn danger" title="Supprimer" onclick="deleteAgency('${a.id}')">🗑</button>
+          </div>
+        </div>`).join('');
+    }
+
+    function openAgency(id) { location.href = 'app.html?agency=' + encodeURIComponent(id); }
+
+    async function addAgency() {
+      const inp = document.getElementById('agName');
+      const name = (inp.value || '').trim();
+      if (!name) { inp.focus(); return; }
+      AGENCIES.push({ id: Date.now().toString(36), name, created: Date.now() });
+      inp.value = '';
+      render(); await save();
+    }
+
+    async function renameAgency(id) {
+      const a = AGENCIES.find(x => x.id === id); if (!a) return;
+      const name = (prompt('Nouveau nom de l\'agence :', a.name) || '').trim();
+      if (!name || name === a.name) return;
+      a.name = name; render(); await save();
+    }
+
+    async function deleteAgency(id) {
+      const a = AGENCIES.find(x => x.id === id); if (!a) return;
+      if (!confirm('Supprimer « ' + a.name + ' » et TOUTES ses données ? Action irréversible.')) return;
+      AGENCIES = AGENCIES.filter(x => x.id !== id);
+      render(); await save();
+      // purge this agency's isolated data from the cloud
+      await SB.from('kv_store').delete().eq('user_id', USER.id).like('key', 'md_AG_' + id + '__%');
+    }
+
+    async function doLogout() {
+      await SB.auth.signOut();
+      location.replace('index.html');
+    }
+
+    /* ---- boot: require a Business session ---- */
+    (async function () {
+      const { data } = await SB.auth.getSession();
+      if (!data.session) { location.replace('index.html'); return; }
+      USER = data.session.user;
+      const plan = (USER.user_metadata && USER.user_metadata.plan) || '';
+      if (plan !== 'Business') { location.replace('app.html'); return; }   // only Business uses this panel
+      const { data: row } = await SB.from('kv_store').select('value').eq('user_id', USER.id).eq('key', KEY).maybeSingle();
+      AGENCIES = (row && Array.isArray(row.value)) ? row.value : [];
+      document.getElementById('loading').style.display = 'none';
+      render();
+    })();
+  </script>
+</body>
+</html>
