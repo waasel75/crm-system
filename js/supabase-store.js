@@ -64,7 +64,12 @@ localStorage.removeItem = function (key) { _rawRemove(phys(key)); };
 
 /* ---- read pull: Supabase -> localStorage (physical keys) ---- */
 async function sbPullAll() {
-  const { data, error } = await SB.from('kv_store').select('key,value');
+  // Only fetch what THIS view needs: the active agency's data (or, unscoped,
+  // the non-agency keys) — never every other agency's data. Keeps it light.
+  let q = SB.from('kv_store').select('key,value');
+  q = AG ? q.or('key.like.md_AG_' + AG + '__*,key.not.like.md_AG_*')
+         : q.not('key', 'like', 'md_AG_*');
+  const { data, error } = await q;
   if (error) { console.warn('[supabase] pull failed', error.message); return; }
   for (const row of data) {
     const v = typeof row.value === 'string' ? row.value : JSON.stringify(row.value);
