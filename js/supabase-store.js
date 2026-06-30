@@ -99,21 +99,27 @@ function sbStartRealtime() {
     .subscribe();
 }
 
-/* ---- boot the CRM once a valid session is confirmed ---- */
+/* Agency badge + back button (reads md_agencies from local cache). */
+function sbApplyAgencyChrome() {
+  if (!AG) return;
+  const b = document.getElementById('backToAgencies'); if (b) b.style.display = 'inline-flex';
+  let list; try { list = JSON.parse(_rawGet('md_agencies') || '[]'); } catch { list = []; }
+  const ag = list.find(a => a.id === AG);
+  const el = document.getElementById('agencyName');
+  if (el && ag) { el.textContent = '🏢 ' + ag.name; el.style.display = 'inline-flex'; document.title = ag.name + ' — CRM'; }
+}
+
+/* ---- boot the CRM once a valid session is confirmed ----
+   Render INSTANTLY from the local cache, then refresh from the cloud in the
+   background. Avoids blocking the screen on a multi-MB pull (car photos). */
 async function sbEnterApp() {
-  await sbPullAll();
   sessionStorage.setItem('md_admin', '1');
   const app = document.getElementById('app');
   if (app) app.style.display = 'flex';
-  if (AG) {
-    const b = document.getElementById('backToAgencies'); if (b) b.style.display = 'inline-flex';
-    let list; try { list = JSON.parse(_rawGet('md_agencies') || '[]'); } catch { list = []; }
-    const ag = list.find(a => a.id === AG);
-    const el = document.getElementById('agencyName');
-    if (el && ag) { el.textContent = '🏢 ' + ag.name; el.style.display = 'inline-flex'; document.title = ag.name + ' — CRM'; }
-  }
+  sbApplyAgencyChrome();
   if (typeof init === 'function') init();
   sbStartRealtime();
+  sbPullAll().then(() => { sbApplyAgencyChrome(); window.dispatchEvent(new Event('db-synced')); });
 }
 
 // Logout -> end session and return to landing.

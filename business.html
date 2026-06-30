@@ -119,13 +119,13 @@ const agData = (id,key) => { const v = DB['md_AG_'+id+'__'+key]; return Array.is
 
 function agencies(){ const a = DB['md_agencies']; return Array.isArray(a)?a:[]; }
 
+const VCOUNT = {};   // 'md_AG_<id>__md_vehicles' -> nb de véhicules (compté côté serveur)
 function agStats(id){
   const res = agData(id,'md_reservations');
-  const veh = agData(id,'md_vehicles');
   const clients = new Set();
   let revenue = 0;
   for(const r of res){ clients.add(r.phone || r.name); if(r.status==='completed') revenue += +r.total||0; }
-  return { cars: veh.length, reservations: res.length, clients: clients.size, revenue };
+  return { cars: VCOUNT['md_AG_'+id+'__md_vehicles']||0, reservations: res.length, clients: clients.size, revenue };
 }
 
 /* ---- cloud ----
@@ -135,15 +135,22 @@ function agStats(id){
 function _parse(v){ if(typeof v==='string'){ try{ return JSON.parse(v); }catch{} } return v; }
 async function pullAll(){
   for(const k in DB) delete DB[k];
+  for(const k in VCOUNT) delete VCOUNT[k];
   const { data: aRow } = await SB.from('kv_store').select('value').eq('key','md_agencies').maybeSingle();
   const list = aRow && Array.isArray(_parse(aRow.value)) ? _parse(aRow.value) : [];
   DB['md_agencies'] = list;
   if(!list.length) return;
-  const keys = [];
-  for(const a of list) keys.push('md_AG_'+a.id+'__md_reservations','md_AG_'+a.id+'__md_vehicles');
-  const { data, error } = await SB.from('kv_store').select('key,value').in('key',keys);
-  if(error){ console.warn(error.message); return; }
-  for(const row of data) DB[row.key] = _parse(row.value);
+  // Only the tiny reservations blobs + server-side vehicle counts.
+  // Never the multi-MB md_vehicles (car photos) — that made this panel hang.
+  const resKeys = list.map(a => 'md_AG_'+a.id+'__md_reservations');
+  const [res, vc] = await Promise.all([
+    SB.from('kv_store').select('key,value').in('key', resKeys),
+    SB.rpc('agency_vehicle_counts')
+  ]);
+  if(res.error) console.warn(res.error.message);
+  else for(const row of res.data) DB[row.key] = _parse(row.value);
+  if(vc.error) console.warn(vc.error.message);
+  else for(const row of vc.data) VCOUNT[row.key] = row.n;
 }
 async function saveAgencies(list){
   DB['md_agencies'] = list;
