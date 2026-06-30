@@ -169,6 +169,62 @@ const PANEL_LANGS = {
     'vid-due':'الفيدانج فاتت','vid-soon':'الفيدانج قريبة (≤1000km)','vid-ok':'مزيان','vid-overdue':'فاتت بـ','vid-remaining':'كم باقي',
     'vid-last':'آخر فيدانج','vid-interval':'الإنترفال','vid-next':'الفيدانج الجاية','btn-edit':'تعديل',
     titles:{dashboard:'📋 لوحة التحكم',clients:'👥 العملاء',reservations:'📋 الحجوزات',vehicles:'🚙 السيارات',vidange:'🛢️ الفيدانج',stats:'📊 الإحصائيات',chats:'المحادثات',settings:'⚙️ الإعدادات'} },
+  es: {
+    dir:'ltr',
+    'nav-dash':'Tablero','nav-clients':'Clientes','nav-res':'Reservas','nav-vehicles':'Vehículos','nav-vidange':'Cambio de aceite',
+    'cl-search-ph':'🔍 Buscar un cliente...','cl-export':'📇 Exportar todos los contactos',
+    'd-contract':'Contrato de alquiler','btn-upload-contract':'Subir contrato','btn-download':'Descargar',
+    'nav-stats':'Estadísticas','settings':'Ajustes','logout':'Cerrar sesión',
+    'lg-title':'Reservas','lg-connexion':'Iniciar sesión','lg-desc':'Acceso reservado a administradores',
+    'lg-user':'Usuario','lg-user-ph':'Tu usuario','lg-pass':'Contraseña','lg-submit':'Entrar →',
+    'lg-forgot':'¿Olvidaste la contraseña?','lg-recovery':'🔑 Recuperación','lg-answer':'Tu respuesta','lg-verify':'Verificar →',
+    'lg-newuser':'Nuevo usuario','lg-newpass':'Nueva contraseña','lg-reset':'Restablecer →','lg-back':'← Volver',
+    'topbar-admin':'👤 Admin',
+    'dash-recent':'Últimas reservas','dash-seeall':'Ver todo →','dash-pending':'Pendiente','dash-status':'Distribución de estados',
+    'res-search-ph':'🔍 Buscar nombre, coche, ciudad, tel...','res-all':'Todos los estados',
+    'res-add':'➕ Añadir una reserva','res-export':'⬇️ Exportar Excel','res-clear':'🗑️ Vaciar','res-empty':'No hay reservas. Haz clic en "➕ Añadir una reserva".',
+    'th-client':'Cliente','th-vehicle':'Vehículo','th-city':'Lugar','th-dates':'Fechas','th-duration':'Duración',
+    'th-total':'Total','th-payment':'Pago','th-status':'Estado','th-actions':'Acciones',
+    'st-pending':'Pendiente','st-payment_pending':'Pago en curso','st-confirmed':'Confirmado','st-completed':'Finalizado','st-cancelled':'Cancelado',
+    'veh-add':'➕ Añadir un vehículo','veh-empty':'No hay vehículos. Haz clic en "➕ Añadir un vehículo".',
+    'veh-available':'Disponible','veh-reserved':'Reservado','veh-maintenance':'En el mecánico','veh-accident':'Accidentado',
+    'vid-empty':'No hay vehículos. Añade vehículos en la sección Vehículos.',
+    'stat-status':'📊 Estados','stat-topcars':'🚗 Mejores vehículos','stat-topcities':'📍 Mejores destinos','stat-revenue':'💰 Ingresos por reserva',
+    'set-lang-t':'🌐 Idioma del panel','set-lang':'Idioma',
+    'set-agency-t':'🏢 Información de la agencia','set-logo':'Logo de la agencia','set-logo-remove':'🗑️ Quitar el logo',
+    'set-name':'Nombre de la agencia','set-phone':'Teléfono / WhatsApp','set-email':'Email','set-address':'Dirección','set-save':'💾 Guardar',
+    'set-creds-t':'🔐 Credenciales de acceso','set-newuser':'Nuevo usuario','set-newpass':'Nueva contraseña',
+    'set-newpass-ph':'Dejar vacío para no cambiar','set-creds-save':'🔑 Actualizar credenciales',
+    'set-secq-t':'❓ Pregunta de seguridad (recuperación de contraseña)','set-question':'Pregunta','set-answer':'Respuesta','set-secq-save':'💾 Guardar la pregunta',
+    'set-danger-t':'⚠️ Zona de peligro','set-danger-s':'Restablece todos los datos de la aplicación (reservas, coches, ofertas, ajustes).',
+    'set-danger-btn':'🗑️ Restablecimiento completo',
+    'exp-title':'📊 Exportar Excel','exp-desc':'Elige el periodo a exportar.','exp-week':'📅 Esta semana','exp-month':'🗓️ Este mes (30 días)',
+    'exp-3m':'📆 Últimos 3 meses','exp-6m':'📆 Últimos 6 meses','exp-year':'📅 Este año (12 meses)','exp-all':'🗂️ Todos los datos',
+    'exp-download':'⬇️ Descargar Excel','exp-cancel':'Cancelar',
+    'f-name':'Nombre del cliente','f-phone':'Teléfono','f-email':'Email','f-email-opt':'Email (opcional)',
+    'f-vehicle':'Vehículo','f-vehicle-choose':'— Elegir —','f-city':'Lugar de entrega','f-start':'Fecha de salida','f-end':'Fecha de regreso',
+    'f-total':'Total (MAD)','f-paytype':'Estado del pago','f-paid-full':'✅ Pagado completo','f-paid-deposit':'💳 Anticipo','f-paid-none':'⏳ Nada pagado',
+    'f-paid-amount':'Importe ya pagado / anticipo (MAD)','f-paid-amount2':'Ya pagado (MAD)',
+    'f-caution-check':'Fianza / Garantía tomada','f-caution-amount':'Importe de la fianza (MAD)',
+    'btn-save':'💾 Guardar','btn-cancel':'Cancelar','btn-update':'💾 Actualizar',
+    'm-manual-title':'📞 Nueva reserva manual','m-edit-title':'✏️ Editar la reserva',
+    'avail-ok':'✅ Disponible para estas fechas','avail-no-accident':'❌ No disponible — vehículo accidentado','avail-no-maint':'❌ No disponible — en el mecánico',
+    'avail-no-overlap':'❌ No disponible — ya reservado del','avail-to':'al',
+    'd-client':'👤 Cliente','d-phone':'📞 Teléfono','d-email':'✉️ Email','d-vehicle':'🚗 Vehículo','d-place':'📍 Lugar',
+    'd-start':'📅 Salida','d-end':'📅 Regreso','d-duration':'⏱ Duración','d-price-day':'💵 Precio/día','d-total':'💰 Total a pagar',
+    'd-payment':'💳 Pago','d-paid':'✅ Ya pagado','d-due':'⏳ Restante','d-caution':'🔒 Fianza','d-caution-none':'No tomada',
+    'd-created':'🕐 Creado el','btn-edit-all':'✏️ Editar toda la reserva','btn-confirm':'✅ Confirmar','btn-reject':'❌ Cancelar',
+    'btn-wa':'📲 WhatsApp','btn-delete':'🗑️ Eliminar','btn-close':'Cerrar','btn-invoice':'🧾 Descargar la factura',
+    'm-vehicle-add':'Añadir un vehículo','m-vehicle-edit':'Editar vehículo','m-vehicle-name':'Nombre del vehículo','m-vehicle-plate':'Matrícula',
+    'm-vehicle-status':'Estado','m-vehicle-note':'Nota (accidente / mecánica)','m-vehicle-photos':'Fotos del vehículo',
+    'm-cal-title':'📅 Calendario','m-block-title':'⛔ Reservar','m-block-client':'Cliente (opcional)','m-block-save':'💾 Bloquear estas fechas',
+    'm-cal-avail':'🟢 Disponible','m-cal-reserved':'🔴 Reservado','m-cal-today':'🟡 Hoy',
+    'vf-name':'Nombre del vehículo','vf-plate':'Matrícula','vf-brand':'Marca','vf-model':'Modelo','vf-year':'Año',
+    'vf-color':'Color','vf-fuel':'Combustible','vf-gearbox':'Caja de cambios','vf-price':'Precio/día (MAD)','vf-mileage':'Kilometraje actual',
+    'vf-lastvidange':'Último cambio de aceite (km)','vf-interval':'Intervalo de cambio (km)','vf-insurance':'Seguro — vencimiento','vf-visit':'Inspección técnica — vencimiento',
+    'vid-due':'Cambio de aceite vencido','vid-soon':'Cambio de aceite próximo (≤1000km)','vid-ok':'OK','vid-overdue':'Vencido por','vid-remaining':'km restantes',
+    'vid-last':'Último cambio','vid-interval':'Intervalo','vid-next':'Próximo cambio','btn-edit':'Editar',
+    titles:{dashboard:'📋 Tablero',clients:'👥 Clientes',reservations:'📋 Reservas',vehicles:'🚙 Vehículos',vidange:'🛢️ Cambio de aceite',stats:'📊 Estadísticas',chats:'Conversaciones',settings:'⚙️ Ajustes'} },
 };
 
 function curLang() { return localStorage.getItem('md_panel_lang') || 'fr'; }
@@ -187,8 +243,7 @@ function applyPanelLang(code) {
     const v = L[el.dataset.ptPh];
     if (v) el.placeholder = v;
   });
-  const sel = document.getElementById('panelLangSel');
-  if (sel) sel.value = code;
+  ['panelLangSel', 'topLangSel'].forEach(id => { const s = document.getElementById(id); if (s) s.value = code; });
   const pageTitle = document.getElementById('pageTitle');
   if (pageTitle && window.currentAdminTab) pageTitle.textContent = L.titles[window.currentAdminTab] || pageTitle.textContent;
   if (window.currentAdminTab && typeof showTab === 'function' && document.getElementById('app')?.style.display !== 'none') {
