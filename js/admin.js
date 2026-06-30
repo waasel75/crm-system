@@ -253,6 +253,11 @@ function submitManualReservation() {
   const amountPaid = payType === 'full' ? total : payType === 'none' ? 0 : (+v('mr_paid') || 0);
   if (!name || !phone || !car || !city || !start || !end) { toast('⚠️ Remplissez les champs obligatoires'); return; }
   if (window._mrAvailable === false) { toast('❌ Véhicule indisponible pour ces dates'); return; }
+  const paperIssues = vehiclePaperIssues(car);
+  if (paperIssues.length) {
+    alert('❌ Réservation bloquée — papiers du véhicule non valides :\n\n• ' + paperIssues.join('\n• ') + '\n\n➡️ Mettez à jour les papiers du véhicule avant de créer la réservation.');
+    return;
+  }
   const hasCaution = document.getElementById('mr_hasCaution').checked;
   const caution = hasCaution ? (+v('mr_caution')||0) : 0;
   const days = Math.max(1, Math.round((new Date(end)-new Date(start))/86400000));
@@ -1403,6 +1408,16 @@ function echDateInfo(dateStr) {
     txt: expired ? `dépassée (${Math.abs(days)}j)` : days === 0 ? `aujourd'hui ⚠️` : `${days}j restants${warn?' ⚠️':''}`,
     color: expired ? 'var(--red)' : warn ? 'var(--yellow)' : 'var(--green)'
   };
+}
+// Papiers non valides (expirés) d'un véhicule — bloque la réservation.
+function vehiclePaperIssues(carName) {
+  const v = getVehicles().find(x => x.name === carName);
+  if (!v) return [];
+  const issues = [];
+  const ins = echDateInfo(v.insurance); if (ins.has && ins.expired) issues.push(`🛡️ Assurance expirée depuis ${Math.abs(ins.days)} jour(s)`);
+  const vis = echDateInfo(v.visit);     if (vis.has && vis.expired) issues.push(`🔧 Visite technique expirée depuis ${Math.abs(vis.days)} jour(s)`);
+  const vid = vidangeInfo(v);           if (vid.due) issues.push(`🛢️ Vidange dépassée de ${Math.abs(vid.remaining)} km`);
+  return issues;
 }
 function echeanceAlerts() {
   const out = [];
