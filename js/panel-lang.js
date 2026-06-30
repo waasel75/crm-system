@@ -316,6 +316,54 @@ const _MORE = {
 };
 for (const c in _MORE) Object.assign(PANEL_LANGS[c], _MORE[c]);
 
+const _MORE2 = {
+  fr: {
+    'acc-sub':'Mon abonnement','acc-plan':'Plan','acc-status':'Statut','acc-active':'Actif ✅','acc-since':'Membre depuis',
+    'acc-info':'Informations du compte','acc-email':'Email','acc-method':'Méthode de connexion','acc-last':'Dernière connexion','acc-id':'ID compte',
+    'acc-prov-email':'📧 Email / mot de passe','acc-prov-google':'🔵 Google',
+    'acc-changepass':'Changer le mot de passe','acc-newpass':'Nouveau mot de passe','acc-newpass-ph':'Au moins 8 caractères','acc-confirmpass':'Confirmer le mot de passe','acc-confirmpass-ph':'Retapez le mot de passe','acc-update-btn':'🔑 Mettre à jour le mot de passe',
+    'stat-total':'Total réservations','stat-ca':'CA total (MAD)','stat-avg':'Panier moyen (MAD)','stat-done':'Terminées','stat-nodata':'Aucune donnée',
+    'veh-return':'🔓 Retour le','veh-next':'Prochaine réservation :','veh-none':'Aucune réservation prévue','veh-repair':'En réparation','veh-maint-progress':'Entretien en cours',
+    'veh-assurance':'Assurance','veh-visit':'Visite tech.','veh-vidange-l':'Vidange','veh-km-left':'km restants','veh-km-over':'dépassée de',
+    'veh-cal':'📅 Calendrier','veh-reserve':'⛔ Réserver','veh-edit':'✏️ Modifier','ech-badge':'échéance(s)',
+    'cl-profile':'👤 Profil client','cl-resv':'Réservations','cl-spent':'MAD dépensé','cl-waiting':'En attente','cl-history':'HISTORIQUE','cl-export':'📇 Exporter contact',
+  },
+  en: {
+    'acc-sub':'My subscription','acc-plan':'Plan','acc-status':'Status','acc-active':'Active ✅','acc-since':'Member since',
+    'acc-info':'Account information','acc-email':'Email','acc-method':'Login method','acc-last':'Last login','acc-id':'Account ID',
+    'acc-prov-email':'📧 Email / password','acc-prov-google':'🔵 Google',
+    'acc-changepass':'Change password','acc-newpass':'New password','acc-newpass-ph':'At least 8 characters','acc-confirmpass':'Confirm password','acc-confirmpass-ph':'Re-enter the password','acc-update-btn':'🔑 Update password',
+    'stat-total':'Total reservations','stat-ca':'Total revenue (MAD)','stat-avg':'Average basket (MAD)','stat-done':'Completed','stat-nodata':'No data',
+    'veh-return':'🔓 Return on','veh-next':'Next reservation:','veh-none':'No upcoming reservation','veh-repair':'Under repair','veh-maint-progress':'Service in progress',
+    'veh-assurance':'Insurance','veh-visit':'Tech. inspection','veh-vidange-l':'Oil change','veh-km-left':'km remaining','veh-km-over':'overdue by',
+    'veh-cal':'📅 Calendar','veh-reserve':'⛔ Reserve','veh-edit':'✏️ Edit','ech-badge':'due date(s)',
+    'cl-profile':'👤 Client profile','cl-resv':'Reservations','cl-spent':'MAD spent','cl-waiting':'Pending','cl-history':'HISTORY','cl-export':'📇 Export contact',
+  },
+  ar: {
+    'acc-sub':'اشتراكي','acc-plan':'الخطة','acc-status':'الحالة','acc-active':'نشط ✅','acc-since':'عضو منذ',
+    'acc-info':'معلومات الحساب','acc-email':'البريد الإلكتروني','acc-method':'طريقة الدخول','acc-last':'آخر دخول','acc-id':'معرّف الحساب',
+    'acc-prov-email':'📧 البريد / كلمة السر','acc-prov-google':'🔵 Google',
+    'acc-changepass':'تغيير كلمة السر','acc-newpass':'كلمة سر جديدة','acc-newpass-ph':'على الأقل 8 أحرف','acc-confirmpass':'تأكيد كلمة السر','acc-confirmpass-ph':'أعد كتابة كلمة السر','acc-update-btn':'🔑 تحديث كلمة السر',
+    'stat-total':'إجمالي الحجوزات','stat-ca':'إجمالي المعاملات (MAD)','stat-avg':'متوسط السلة (MAD)','stat-done':'منتهية','stat-nodata':'لا توجد بيانات',
+    'veh-return':'🔓 الرجوع فـ','veh-next':'الحجز القادم:','veh-none':'لا حجز قادم','veh-repair':'فالإصلاح','veh-maint-progress':'الصيانة جارية',
+    'veh-assurance':'التأمين','veh-visit':'الزيارة التقنية','veh-vidange-l':'الفيدانج','veh-km-left':'كم باقي','veh-km-over':'فاتت بـ',
+    'veh-cal':'📅 الكلندري','veh-reserve':'⛔ حجز','veh-edit':'✏️ تعديل','ech-badge':'استحقاق',
+    'cl-profile':'👤 ملف العميل','cl-resv':'الحجوزات','cl-spent':'MAD مصروفة','cl-waiting':'فالانتظار','cl-history':'السجل','cl-export':'📇 تصدير جهة الاتصال',
+  },
+  es: {
+    'acc-sub':'Mi suscripción','acc-plan':'Plan','acc-status':'Estado','acc-active':'Activo ✅','acc-since':'Miembro desde',
+    'acc-info':'Información de la cuenta','acc-email':'Email','acc-method':'Método de acceso','acc-last':'Último acceso','acc-id':'ID de cuenta',
+    'acc-prov-email':'📧 Email / contraseña','acc-prov-google':'🔵 Google',
+    'acc-changepass':'Cambiar la contraseña','acc-newpass':'Nueva contraseña','acc-newpass-ph':'Al menos 8 caracteres','acc-confirmpass':'Confirmar la contraseña','acc-confirmpass-ph':'Vuelve a escribir la contraseña','acc-update-btn':'🔑 Actualizar la contraseña',
+    'stat-total':'Total de reservas','stat-ca':'Facturación total (MAD)','stat-avg':'Cesta media (MAD)','stat-done':'Finalizadas','stat-nodata':'Sin datos',
+    'veh-return':'🔓 Devolución el','veh-next':'Próxima reserva:','veh-none':'Sin reserva prevista','veh-repair':'En reparación','veh-maint-progress':'Mantenimiento en curso',
+    'veh-assurance':'Seguro','veh-visit':'Inspección técnica','veh-vidange-l':'Cambio de aceite','veh-km-left':'km restantes','veh-km-over':'vencido por',
+    'veh-cal':'📅 Calendario','veh-reserve':'⛔ Reservar','veh-edit':'✏️ Editar','ech-badge':'vencimiento(s)',
+    'cl-profile':'👤 Perfil de cliente','cl-resv':'Reservas','cl-spent':'MAD gastados','cl-waiting':'Pendiente','cl-history':'HISTORIAL','cl-export':'📇 Exportar contacto',
+  },
+};
+for (const c in _MORE2) Object.assign(PANEL_LANGS[c], _MORE2[c]);
+
 function curLang() { return localStorage.getItem('md_panel_lang') || 'fr'; }
 function T(key) { const L = PANEL_LANGS[curLang()] || PANEL_LANGS.fr; return L[key] != null ? L[key] : (PANEL_LANGS.fr[key] || key); }
 

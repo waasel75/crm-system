@@ -4,12 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>CRM Réservations</title>
-  <link rel="stylesheet" href="css/admin.css?v=11"/>
+  <link rel="stylesheet" href="css/admin.css?v=12"/>
   <script>window.PAGE_SOURCE = 'all';</script>
-  <script src="js/auth.js?v=11"></script>
-  <script src="js/panel-lang.js?v=11"></script>
+  <script src="js/auth.js?v=12"></script>
+  <script src="js/panel-lang.js?v=12"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=11"></script>
+  <script src="js/supabase-config.js?v=12"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     .acc-info{display:flex;flex-direction:column}
@@ -18,6 +18,9 @@
     .acc-row span{color:var(--muted);font-size:.85rem}
     .acc-row b{font-weight:600;text-align:right;word-break:break-all}
     .acc-badge{background:rgba(230,51,41,.14);color:#ff4d42;border:1px solid rgba(230,51,41,.3);padding:3px 12px;border-radius:999px;font-size:.82rem}
+    .lang-sel{appearance:none;-webkit-appearance:none;background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(34,211,238,.14));color:#e8e8f0;border:1px solid rgba(124,92,255,.45);border-radius:10px;padding:7px 30px 7px 12px;font-weight:800;font-size:.82rem;cursor:pointer;outline:none;transition:.15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M0 0l5 7 5-7z' fill='%23a78bfa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+    .lang-sel:hover{border-color:#7c5cff;filter:brightness(1.12)}
+    .lang-sel option{background:#14141c;color:#fff;font-weight:600}
   </style>
 </head>
 <body>
@@ -61,11 +64,11 @@
       </div>
       <div class="topbar-right">
         <span id="echBadge" onclick="navigateToEcheances()" style="display:none;cursor:pointer;background:var(--red,#e11d2a);color:#fff;font-weight:700;font-size:.8rem;padding:6px 12px;border-radius:999px"></span>
-        <select id="topLangSel" onchange="applyPanelLang(this.value)" title="Langue" style="background:rgba(255,255,255,.06);color:inherit;border:1px solid var(--border,#2a2a3a);border-radius:8px;padding:6px 8px;font-size:.82rem;font-weight:700;cursor:pointer">
-          <option value="fr">🇫🇷 FR</option>
-          <option value="ar">🇲🇦 AR</option>
-          <option value="en">🇬🇧 EN</option>
-          <option value="es">🇪🇸 ES</option>
+        <select id="topLangSel" class="lang-sel" onchange="applyPanelLang(this.value)" title="Langue / اللغة / Language / Idioma">
+          <option value="fr">🇫🇷 Français</option>
+          <option value="ar">🇲🇦 العربية</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="es">🇪🇸 Español</option>
         </select>
         <span class="admin-chip" data-pt="topbar-admin">👤 Admin</span>
       </div>
@@ -196,28 +199,28 @@
     <div id="tabAccount" class="tab-content" style="display:none">
       <div class="dash-row">
         <div class="dash-panel" style="flex:1;min-width:320px">
-          <div class="panel-header"><h3>💳 Mon abonnement</h3></div>
+          <div class="panel-header"><h3>💳 <span data-pt="acc-sub">Mon abonnement</span></h3></div>
           <div class="acc-info">
-            <div class="acc-row"><span>Plan</span><b id="acc_plan" class="acc-badge">—</b></div>
-            <div class="acc-row"><span>Statut</span><b id="acc_status">—</b></div>
-            <div class="acc-row"><span>Membre depuis</span><b id="acc_since">—</b></div>
+            <div class="acc-row"><span data-pt="acc-plan">Plan</span><b id="acc_plan" class="acc-badge">—</b></div>
+            <div class="acc-row"><span data-pt="acc-status">Statut</span><b id="acc_status">—</b></div>
+            <div class="acc-row"><span data-pt="acc-since">Membre depuis</span><b id="acc_since">—</b></div>
           </div>
         </div>
         <div class="dash-panel" style="flex:1;min-width:320px">
-          <div class="panel-header"><h3>👤 Informations du compte</h3></div>
+          <div class="panel-header"><h3>👤 <span data-pt="acc-info">Informations du compte</span></h3></div>
           <div class="acc-info">
-            <div class="acc-row"><span>Email</span><b id="acc_email">—</b></div>
-            <div class="acc-row"><span>Méthode de connexion</span><b id="acc_provider">—</b></div>
-            <div class="acc-row"><span>Dernière connexion</span><b id="acc_last">—</b></div>
-            <div class="acc-row"><span>ID compte</span><b id="acc_id" style="font-size:.7rem;font-weight:500;color:var(--muted)">—</b></div>
+            <div class="acc-row"><span data-pt="acc-email">Email</span><b id="acc_email">—</b></div>
+            <div class="acc-row"><span data-pt="acc-method">Méthode de connexion</span><b id="acc_provider">—</b></div>
+            <div class="acc-row"><span data-pt="acc-last">Dernière connexion</span><b id="acc_last">—</b></div>
+            <div class="acc-row"><span data-pt="acc-id">ID compte</span><b id="acc_id" style="font-size:.7rem;font-weight:500;color:var(--muted)">—</b></div>
           </div>
         </div>
       </div>
       <div class="dash-panel" style="max-width:520px">
-        <div class="panel-header"><h3>🔐 Changer le mot de passe</h3></div>
-        <div class="form-group"><label>Nouveau mot de passe</label><input id="acc_newPass" type="password" placeholder="Au moins 8 caractères"/></div>
-        <div class="form-group"><label>Confirmer le mot de passe</label><input id="acc_newPass2" type="password" placeholder="Retapez le mot de passe"/></div>
-        <button class="btn-primary" onclick="changePassword()">🔑 Mettre à jour le mot de passe</button>
+        <div class="panel-header"><h3>🔐 <span data-pt="acc-changepass">Changer le mot de passe</span></h3></div>
+        <div class="form-group"><label data-pt="acc-newpass">Nouveau mot de passe</label><input id="acc_newPass" type="password" data-pt-ph="acc-newpass-ph" placeholder="Au moins 8 caractères"/></div>
+        <div class="form-group"><label data-pt="acc-confirmpass">Confirmer le mot de passe</label><input id="acc_newPass2" type="password" data-pt-ph="acc-confirmpass-ph" placeholder="Retapez le mot de passe"/></div>
+        <button class="btn-primary" onclick="changePassword()" data-pt="acc-update-btn">🔑 Mettre à jour le mot de passe</button>
         <p class="login-err" id="acc_passMsg" style="text-align:left"></p>
         <p style="color:var(--muted);font-size:.78rem;margin-top:10px" id="acc_googleNote"></p>
       </div>
@@ -313,7 +316,7 @@
 </div>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/admin.js?v=11"></script>
-<script src="js/supabase-store.js?v=11"></script>
+<script src="js/admin.js?v=12"></script>
+<script src="js/supabase-store.js?v=12"></script>
 </body>
 </html>

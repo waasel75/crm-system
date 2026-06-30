@@ -744,7 +744,7 @@ function openClientDetail(key) {
   const c = list[0];
   const totalRevenue = list.filter(r => r.status !== 'cancelled').reduce((s, r) => s + (+r.total||0), 0);
   document.getElementById('detailModal').innerHTML = `
-    <div class="modal-title"><span>👤 Profil client</span><button class="modal-close-btn" onclick="closeDetail()">✕</button></div>
+    <div class="modal-title"><span>${T('cl-profile')}</span><button class="modal-close-btn" onclick="closeDetail()">✕</button></div>
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)">
       <div class="cc-avatar" style="width:52px;height:52px;font-size:1rem;background:${avatarColor(c.phone||c.name)}">${esc(initials(c.name))}</div>
       <div>
@@ -753,11 +753,11 @@ function openClientDetail(key) {
       </div>
     </div>
     <div class="cc-stats" style="margin-bottom:16px">
-      <div class="cc-stat"><div class="cc-stat-val">${list.length}</div><div class="cc-stat-label">Réservations</div></div>
-      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--green);font-size:.8rem">${fmtN(totalRevenue)}</div><div class="cc-stat-label">MAD dépensé</div></div>
-      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--yellow)">${list.filter(r=>r.status==='pending').length}</div><div class="cc-stat-label">En attente</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">${list.length}</div><div class="cc-stat-label">${T('cl-resv')}</div></div>
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--green);font-size:.8rem">${fmtN(totalRevenue)}</div><div class="cc-stat-label">${T('cl-spent')}</div></div>
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--yellow)">${list.filter(r=>r.status==='pending').length}</div><div class="cc-stat-label">${T('cl-waiting')}</div></div>
     </div>
-    <div style="font-weight:600;font-size:.82rem;margin-bottom:8px;color:var(--muted)">HISTORIQUE</div>
+    <div style="font-weight:600;font-size:.82rem;margin-bottom:8px;color:var(--muted)">${T('cl-history')}</div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${list.map(r => `
         <div class="res-item" onclick="closeDetail();showDetail(${r.id})" style="cursor:pointer">
@@ -774,9 +774,9 @@ function openClientDetail(key) {
         </div>`).join('')}
     </div>
     <div class="modal-actions" style="margin-top:16px">
-      ${c.phone ? `<button class="modal-btn-wa" onclick="window.open('https://wa.me/${(c.phone||'').replace(/\\D/g,'')}','_blank')">📲 WhatsApp</button>` : ''}
-      <button class="btn-sm" onclick="exportContact('${esc(key).replace(/'/g,"\\'")}')">📇 Exporter contact</button>
-      <button class="modal-btn-close" onclick="closeDetail()">Fermer</button>
+      ${c.phone ? `<button class="modal-btn-wa" onclick="window.open('https://wa.me/${(c.phone||'').replace(/\\D/g,'')}','_blank')">${T('btn-wa')}</button>` : ''}
+      <button class="btn-sm" onclick="exportContact('${esc(key).replace(/'/g,"\\'")}')">${T('cl-export')}</button>
+      <button class="modal-btn-close" onclick="closeDetail()">${T('btn-close')}</button>
     </div>
   `;
   document.getElementById('detailOverlay').classList.add('open');
@@ -833,10 +833,10 @@ function renderStats() {
   const pending   = all.filter(r=>r.status==='pending').length;
 
   document.getElementById('statsKpi').innerHTML = `
-    <div class="kpi-card c-red"><div class="kpi-icon">📋</div><div class="kpi-val">${all.length}</div><div class="kpi-label">Total réservations</div></div>
-    <div class="kpi-card c-green"><div class="kpi-icon">💰</div><div class="kpi-val" style="font-size:1.4rem">${fmtN(revenue)}</div><div class="kpi-label">CA total (MAD)</div></div>
-    <div class="kpi-card c-yellow"><div class="kpi-icon">🧮</div><div class="kpi-val">${fmtN(avg)}</div><div class="kpi-label">Panier moyen (MAD)</div></div>
-    <div class="kpi-card c-blue"><div class="kpi-icon">🏁</div><div class="kpi-val" style="color:var(--blue)">${completed}</div><div class="kpi-label">Terminées</div></div>
+    <div class="kpi-card c-red"><div class="kpi-icon">📋</div><div class="kpi-val">${all.length}</div><div class="kpi-label">${T('stat-total')}</div></div>
+    <div class="kpi-card c-green"><div class="kpi-icon">💰</div><div class="kpi-val" style="font-size:1.4rem">${fmtN(revenue)}</div><div class="kpi-label">${T('stat-ca')}</div></div>
+    <div class="kpi-card c-yellow"><div class="kpi-icon">🧮</div><div class="kpi-val">${fmtN(avg)}</div><div class="kpi-label">${T('stat-avg')}</div></div>
+    <div class="kpi-card c-blue"><div class="kpi-icon">🏁</div><div class="kpi-val" style="color:var(--blue)">${completed}</div><div class="kpi-label">${T('stat-done')}</div></div>
   `;
 
   // Status chart
@@ -853,7 +853,7 @@ function renderStats() {
   document.getElementById('statusChart').innerHTML = Object.entries(STATUS).map(([k,v])=>{
     const n = counts[k]||0;
     return `<div class="bar-row">
-      <span class="bar-label">${v.icon} ${v.label}</span>
+      <span class="bar-label">${v.icon} ${statusLabel(k)}</span>
       <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(n/max*100)}%;background:${v.color}"></div></div>
       <span class="bar-val">${n}</span>
     </div>`;
@@ -866,7 +866,7 @@ function renderStats() {
       <span class="bar-label">${k}</span>
       <div class="bar-bg"><div class="bar-fill" style="width:${Math.round(v/mx*100)}%;background:var(--red)"></div></div>
       <span class="bar-val">${v}</span>
-    </div>`).join('') || '<p style="color:var(--muted);font-size:.82rem">Aucune donnée</p>';
+    </div>`).join('') || `<p style="color:var(--muted);font-size:.82rem">${T('stat-nodata')}</p>`;
   };
 
   document.getElementById('topCars').innerHTML   = topList(cars);
@@ -882,7 +882,7 @@ function renderStats() {
         <div class="rev-label">${esc(r.car?.split(' ')[0])}</div>
         <div class="rev-val">${Math.round(+r.total/1000)}k</div>
       </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.82rem">Aucune donnée</p>';
+    : `<p style="color:var(--muted);font-size:.82rem">${T('stat-nodata')}</p>`;
 }
 
 /* ===== AGENCE ===== */
@@ -1085,6 +1085,7 @@ function showTab(tab, el) {
   window.currentAdminTab = tab;
   const L = PANEL_LANGS[localStorage.getItem('md_panel_lang') || 'fr'];
   document.getElementById('pageTitle').textContent = L.titles[tab] || (tab==='account'?'👤 Mon compte':(tab==='settings'?'⚙️ Paramètres':(tab==='vehicles'?'🚙 Véhicules':(tab==='vidange'?'🛢️ Vidange':tab))));
+  if (tab==='dashboard') renderDashboard();
   if (tab==='account') renderAccount();
   if (tab==='clients') renderClients();
   if (tab==='reservations') renderTable();
@@ -1139,11 +1140,11 @@ function renderVehicles() {
     const sched = vehicleSchedule(v.name);
     let status = v.status, sub = '';
     if (status==='available') {
-      if (sched.current) { status='reserved'; sub = `🔓 Retour le ${sched.current.end}`; }
-      else if (sched.next) { sub = `Prochaine réservation: ${sched.next.start}`; }
-      else { sub = 'Aucune réservation prévue'; }
+      if (sched.current) { status='reserved'; sub = `${T('veh-return')} ${sched.current.end}`; }
+      else if (sched.next) { sub = `${T('veh-next')} ${sched.next.start}`; }
+      else { sub = T('veh-none'); }
     } else if (status==='maintenance' || status==='accident') {
-      sub = v.note ? esc(v.note) : (status==='accident' ? 'En réparation' : 'Entretien en cours');
+      sub = v.note ? esc(v.note) : (status==='accident' ? T('veh-repair') : T('veh-maint-progress'));
     }
     const st = VSTATUS[status];
     const img = (v.images&&v.images[0]) ? `<img src="${v.images[0]}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;margin-bottom:10px"/>` : '';
@@ -1162,14 +1163,14 @@ function renderVehicles() {
       </div>
       <div style="margin-top:10px;font-size:.82rem;color:var(--muted)">${sub}</div>
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px;font-size:.78rem;border-top:1px solid rgba(255,255,255,.08);padding-top:10px">
-        ${ins.has ? infoRow('🛡️','Assurance',`${fmt(ins.date)} · ${ins.txt}`, ins.color) : infoRow('🛡️','Assurance','—','var(--muted)')}
-        ${vis.has ? infoRow('🔧','Visite tech.',`${fmt(vis.date)} · ${vis.txt}`, vis.color) : infoRow('🔧','Visite tech.','—','var(--muted)')}
-        ${infoRow('🛢️','Vidange', vid.due?`dépassée de ${Math.abs(vid.remaining)} km`:`${vid.remaining} km restants`, vidColor)}
+        ${ins.has ? infoRow('🛡️',T('veh-assurance'),`${fmt(ins.date)} · ${ins.txt}`, ins.color) : infoRow('🛡️',T('veh-assurance'),'—','var(--muted)')}
+        ${vis.has ? infoRow('🔧',T('veh-visit'),`${fmt(vis.date)} · ${vis.txt}`, vis.color) : infoRow('🔧',T('veh-visit'),'—','var(--muted)')}
+        ${infoRow('🛢️',T('veh-vidange-l'), vid.due?`${T('veh-km-over')} ${Math.abs(vid.remaining)} km`:`${vid.remaining} ${T('veh-km-left')}`, vidColor)}
       </div>
       <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="act-btn" onclick="openVehicleCalendar(${v.id})">📅 Calendrier</button>
-        <button class="act-btn ok" onclick="openBlockModal(${v.id})">⛔ Réserver</button>
-        <button class="act-btn ok" onclick="openVehicleModal(${v.id})">✏️ Modifier</button>
+        <button class="act-btn" onclick="openVehicleCalendar(${v.id})">${T('veh-cal')}</button>
+        <button class="act-btn ok" onclick="openBlockModal(${v.id})">${T('veh-reserve')}</button>
+        <button class="act-btn ok" onclick="openVehicleModal(${v.id})">${T('veh-edit')}</button>
         <button class="act-btn del" onclick="deleteVehicle(${v.id})">🗑️</button>
       </div>
     </div>`;
@@ -1511,7 +1512,7 @@ function renderEchBadge() {
   const el = document.getElementById('echBadge');
   if (!el) return;
   const n = echeanceAlerts().length;
-  if (n) { el.textContent = `🔔 ${n} échéance(s)`; el.style.display = 'inline-block'; }
+  if (n) { el.textContent = `🔔 ${n} ${T('ech-badge')}`; el.style.display = 'inline-block'; }
   else   { el.style.display = 'none'; }
 }
 function navigateToEcheances() {
@@ -1587,10 +1588,10 @@ function renderAccount() {
   const fmtD = d => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
   const fmtT = d => d ? new Date(d).toLocaleString('fr-FR') : '—';
   set('acc_plan', plan);
-  set('acc_status', 'Actif ✅');
+  set('acc_status', T('acc-active'));
   set('acc_since', fmtD(u.created_at));
   set('acc_email', u.email || '—');
-  set('acc_provider', prov === 'google' ? '🔵 Google' : '📧 Email / mot de passe');
+  set('acc_provider', prov === 'google' ? T('acc-prov-google') : T('acc-prov-email'));
   set('acc_last', fmtT(u.last_sign_in_at));
   set('acc_id', u.id || '—');
   const note = document.getElementById('acc_googleNote');

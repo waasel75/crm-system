@@ -48,6 +48,9 @@
     .logo{font-family:'Space Grotesk';font-weight:700;font-size:1.3rem;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
     .logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
     .nav-cta{display:flex;gap:10px;align-items:center}
+    .lang-sel{appearance:none;-webkit-appearance:none;background:linear-gradient(135deg,rgba(124,92,255,.22),rgba(34,211,238,.14));color:var(--txt);border:1px solid rgba(124,92,255,.45);border-radius:10px;padding:9px 30px 9px 12px;font-weight:800;font-size:.82rem;cursor:pointer;outline:none;transition:.15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M0 0l5 7 5-7z' fill='%23a78bfa'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+    .lang-sel:hover{border-color:#7c5cff;filter:brightness(1.12)}
+    .lang-sel option{background:#14141c;color:#fff;font-weight:600}
 
     /* ===== hero ===== */
     .hero{text-align:center;padding:96px 0 60px}
@@ -182,8 +185,8 @@
   <div class="wrap nav-in">
     <div class="logo">🚗 <b>CRM</b>&nbsp;SYSTEM</div>
     <div class="nav-cta">
-      <select id="topLangSel" onchange="applyPanelLang(this.value)" title="Langue" style="background:rgba(255,255,255,.06);color:inherit;border:1px solid var(--border);border-radius:8px;padding:8px 8px;font-size:.82rem;font-weight:700;cursor:pointer">
-        <option value="fr">🇫🇷 FR</option><option value="ar">🇲🇦 AR</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option>
+      <select id="topLangSel" class="lang-sel" onchange="applyPanelLang(this.value)" title="Langue / اللغة / Language / Idioma">
+        <option value="fr">🇫🇷 Français</option><option value="ar">🇲🇦 العربية</option><option value="en">🇬🇧 English</option><option value="es">🇪🇸 Español</option>
       </select>
       <button class="btn btn-ghost" onclick="openAuth('login')" data-pt="lp-login">Se connecter</button>
       <button class="btn btn-primary" onclick="openAuth('signup')" data-pt="lp-signup">S'inscrire</button>
@@ -376,7 +379,7 @@ document.querySelectorAll('[data-count]').forEach(el=>_co.observe(el));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/panel-lang.js?v=11"></script>
+<script src="js/panel-lang.js?v=12"></script>
 <script src="js/supabase-config.js?v=3"></script>
 <script src="js/landing.js?v=3"></script>
 </body>
