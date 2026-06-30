@@ -69,28 +69,33 @@
 </head>
 <body>
 <div class="aurora a1"></div><div class="aurora a2"></div>
-<div class="loader" id="loader">Chargement de votre espace…</div>
+<div class="loader" id="loader" data-pt="biz-loading">Chargement de votre espace…</div>
 
 <header class="top">
   <div class="wrap top-in">
-    <div class="logo">🏢 <b>CRM</b>&nbsp;Multi-Agences</div>
-    <div class="who"><span id="who"></span><button class="btn btn-ghost btn-sm" onclick="logout()">🚪 Déconnexion</button></div>
+    <div class="logo">🏢 <b>CRM</b>&nbsp;<span data-pt="biz-multi">Multi-Agences</span></div>
+    <div class="who">
+      <select id="topLangSel" onchange="setBizLang(this.value)" title="Langue" style="background:rgba(255,255,255,.06);color:inherit;border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:.82rem;font-weight:700;cursor:pointer">
+        <option value="fr">🇫🇷 FR</option><option value="ar">🇲🇦 AR</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option>
+      </select>
+      <span id="who"></span><button class="btn btn-ghost btn-sm" onclick="logout()" data-pt="biz-logout">🚪 Déconnexion</button>
+    </div>
   </div>
 </header>
 
 <main class="wrap" id="main" style="display:none;padding-top:6px">
   <div class="tabs">
-    <button class="tab active" id="tabBtnGlobal" onclick="showView('global')">🌐 Vue globale</button>
-    <button class="tab" id="tabBtnAgencies" onclick="showView('agencies')">🏢 Mes agences</button>
+    <button class="tab active" id="tabBtnGlobal" onclick="showView('global')" data-pt="biz-global">🌐 Vue globale</button>
+    <button class="tab" id="tabBtnAgencies" onclick="showView('agencies')" data-pt="biz-agencies">🏢 Mes agences</button>
   </div>
 
   <!-- GLOBAL -->
   <section id="viewGlobal">
-    <div class="eyebrow">Tableau de bord consolidé</div>
-    <h2 class="sec">Toutes vos agences en un coup d'œil</h2>
+    <div class="eyebrow" data-pt="biz-eyebrow">Tableau de bord consolidé</div>
+    <h2 class="sec" data-pt="biz-h2">Toutes vos agences en un coup d'œil</h2>
     <div class="kpis" id="globalKpis"></div>
     <div class="panel">
-      <h3 style="font-family:'Space Grotesk';margin-bottom:14px">Détail par agence</h3>
+      <h3 style="font-family:'Space Grotesk';margin-bottom:14px" data-pt="biz-detail">Détail par agence</h3>
       <div style="overflow-x:auto"><table id="globalTable"></table></div>
     </div>
   </section>
@@ -98,8 +103,8 @@
   <!-- AGENCIES -->
   <section id="viewAgencies" class="hidden">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-      <div><div class="eyebrow">Gestion</div><h2 class="sec" style="margin:0">Mes agences</h2></div>
-      <button class="btn btn-primary" onclick="addAgency()">➕ Nouvelle agence</button>
+      <div><div class="eyebrow" data-pt="biz-gestion">Gestion</div><h2 class="sec" style="margin:0" data-pt="biz-agencies">Mes agences</h2></div>
+      <button class="btn btn-primary" onclick="addAgency()" data-pt="biz-new">➕ Nouvelle agence</button>
     </div>
     <div class="ag-grid" id="agGrid"></div>
   </section>
@@ -107,6 +112,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-config.js"></script>
+<script src="js/panel-lang.js?v=11"></script>
 <script>
 'use strict';
 const SB = supabase.createClient(SUPA.url, SUPA.anonKey);
@@ -192,40 +198,42 @@ function showView(v){
 
 function render(){
   const list = agencies();
-  let T={cars:0,reservations:0,clients:0,revenue:0};
-  const rows = list.map(a=>{ const s=agStats(a.id); T.cars+=s.cars;T.reservations+=s.reservations;T.clients+=s.clients;T.revenue+=s.revenue; return {a,s}; });
+  let TT={cars:0,reservations:0,clients:0,revenue:0};
+  const rows = list.map(a=>{ const s=agStats(a.id); TT.cars+=s.cars;TT.reservations+=s.reservations;TT.clients+=s.clients;TT.revenue+=s.revenue; return {a,s}; });
   document.getElementById('globalKpis').innerHTML = `
-    <div class="kpi"><div class="ic">🏢</div><div class="v">${list.length}</div><div class="l">Agences</div></div>
-    <div class="kpi"><div class="ic">🚙</div><div class="v">${T.cars}</div><div class="l">Véhicules (total)</div></div>
-    <div class="kpi"><div class="ic">📋</div><div class="v">${T.reservations}</div><div class="l">Réservations (total)</div></div>
-    <div class="kpi"><div class="ic">👥</div><div class="v">${T.clients}</div><div class="l">Clients (total)</div></div>
-    <div class="kpi"><div class="ic">💰</div><div class="v">${fmtN(T.revenue)}</div><div class="l">Chiffre d'affaires (MAD)</div></div>`;
+    <div class="kpi"><div class="ic">🏢</div><div class="v">${list.length}</div><div class="l">${T('biz-k-ag')}</div></div>
+    <div class="kpi"><div class="ic">🚙</div><div class="v">${TT.cars}</div><div class="l">${T('biz-k-veh')}</div></div>
+    <div class="kpi"><div class="ic">📋</div><div class="v">${TT.reservations}</div><div class="l">${T('biz-k-res')}</div></div>
+    <div class="kpi"><div class="ic">👥</div><div class="v">${TT.clients}</div><div class="l">${T('biz-k-cl')}</div></div>
+    <div class="kpi"><div class="ic">💰</div><div class="v">${fmtN(TT.revenue)}</div><div class="l">${T('biz-k-ca')}</div></div>`;
   const tbl = document.getElementById('globalTable');
-  tbl.innerHTML = `<thead><tr><th>Agence</th><th class="num">Véhicules</th><th class="num">Réservations</th><th class="num">Clients</th><th class="num">CA (MAD)</th><th></th></tr></thead><tbody>` +
+  tbl.innerHTML = `<thead><tr><th>${T('biz-th-ag')}</th><th class="num">${T('biz-th-veh')}</th><th class="num">${T('biz-th-res')}</th><th class="num">${T('biz-th-cl')}</th><th class="num">${T('biz-th-ca')}</th><th></th></tr></thead><tbody>` +
     (rows.length ? rows.map(({a,s})=>`<tr>
         <td><b>${esc(a.name)}</b></td>
         <td class="num">${s.cars}</td><td class="num">${s.reservations}</td><td class="num">${s.clients}</td>
         <td class="num" style="color:var(--green)">${fmtN(s.revenue)}</td>
-        <td class="num"><button class="btn btn-ghost btn-sm" onclick="openAgency('${a.id}')">Ouvrir →</button></td>
-      </tr>`).join('') : `<tr><td colspan="6" class="empty">Aucune agence. Créez-en une dans « Mes agences ».</td></tr>`) +
+        <td class="num"><button class="btn btn-ghost btn-sm" onclick="openAgency('${a.id}')">${T('biz-open')}</button></td>
+      </tr>`).join('') : `<tr><td colspan="6" class="empty">${T('biz-empty')}</td></tr>`) +
     `</tbody>`;
   document.getElementById('agGrid').innerHTML = rows.map(({a,s})=>`
     <div class="ag-card">
       <h3>${esc(a.name)}</h3>
-      <div class="meta">Créée le ${new Date(a.created).toLocaleDateString('fr-FR')}</div>
+      <div class="meta">${T('biz-created')} ${new Date(a.created).toLocaleDateString('fr-FR')}</div>
       <div class="ag-mini">
-        <div><b>${s.cars}</b>Véhicules</div>
-        <div><b>${s.reservations}</b>Réserv.</div>
-        <div><b style="color:var(--green);font-size:1rem">${fmtN(s.revenue)}</b>CA MAD</div>
+        <div><b>${s.cars}</b>${T('biz-veh')}</div>
+        <div><b>${s.reservations}</b>${T('biz-res-s')}</div>
+        <div><b style="color:var(--green);font-size:1rem">${fmtN(s.revenue)}</b>${T('biz-ca-s')}</div>
       </div>
       <div class="ag-actions">
-        <button class="btn btn-primary btn-sm" style="flex:1" onclick="openAgency('${a.id}')">Ouvrir le système →</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="openAgency('${a.id}')">${T('biz-opensys')}</button>
         <button class="ic-btn" title="Renommer" onclick="renameAgency('${a.id}')">✏️</button>
         <button class="ic-btn" title="Supprimer" onclick="deleteAgency('${a.id}')">🗑️</button>
       </div>
     </div>`).join('') +
-    `<button class="ag-card add-card" onclick="addAgency()"><span class="plus">＋</span>Nouvelle agence</button>`;
+    `<button class="ag-card add-card" onclick="addAgency()"><span class="plus">＋</span>${T('biz-newcard')}</button>`;
 }
+
+function setBizLang(c){ if(typeof applyPanelLang==='function') applyPanelLang(c); render(); }
 
 async function logout(){ await SB.auth.signOut(); location.replace('index.html'); }
 

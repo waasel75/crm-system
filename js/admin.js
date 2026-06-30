@@ -478,33 +478,33 @@ function renderDashboard() {
     <div class="kpi-card c-yellow">
       <div class="kpi-icon">💳</div>
       <div class="kpi-val" style="font-size:1.4rem;color:#f97316">${fmtN(unpaidDue)}</div>
-      <div class="kpi-label">Restant à percevoir (MAD)</div>
-      ${unpaidDue?'<div class="kpi-sub warn">Avances en attente</div>':'<div class="kpi-sub up">Tout payé ✓</div>'}
+      <div class="kpi-label">${T('k-due')}</div>
+      ${unpaidDue?`<div class="kpi-sub warn">${T('k-due-warn')}</div>`:`<div class="kpi-sub up">${T('k-paid-all')}</div>`}
     </div>
     <div class="kpi-card c-red">
       <div class="kpi-icon">📋</div>
       <div class="kpi-val">${total}</div>
-      <div class="kpi-label">Total réservations</div>
-      ${pending?`<div class="kpi-sub warn">${pending} en attente</div>`:'<div class="kpi-sub up">Tout traité ✓</div>'}
+      <div class="kpi-label">${T('k-total')}</div>
+      ${pending?`<div class="kpi-sub warn">${pending} ${T('k-pending-sfx')}</div>`:`<div class="kpi-sub up">${T('k-alldone')}</div>`}
     </div>
     <div class="kpi-card c-green">
       <div class="kpi-icon">💰</div>
       <div class="kpi-val" style="font-size:1.5rem">${fmtN(revenue)}</div>
-      <div class="kpi-label">Chiffre d'affaires (MAD)</div>
-      <div class="kpi-sub up">Réservations terminées uniquement</div>
+      <div class="kpi-label">${T('k-ca')}</div>
+      <div class="kpi-sub up">${T('k-ca-sub')}</div>
     </div>
     <div class="kpi-card c-yellow">
       <div class="kpi-icon">⏳</div>
       <div class="kpi-val" style="color:var(--yellow)">${pending + payment_pending}</div>
-      <div class="kpi-label">En attente</div>
-      ${payment_pending?`<div class="kpi-sub" style="color:#f97316">💳 ${payment_pending} paiement en cours</div>`:
-        pending?`<div class="kpi-sub warn">Action requise</div>`:'<div class="kpi-sub up">Aucune en attente</div>'}
+      <div class="kpi-label">${T('k-waiting')}</div>
+      ${payment_pending?`<div class="kpi-sub" style="color:#f97316">💳 ${payment_pending} ${T('k-pay-progress')}</div>`:
+        pending?`<div class="kpi-sub warn">${T('k-action')}</div>`:`<div class="kpi-sub up">${T('k-none-waiting')}</div>`}
     </div>
     <div class="kpi-card c-blue">
       <div class="kpi-icon">✅</div>
       <div class="kpi-val" style="color:var(--green)">${confirmed}</div>
-      <div class="kpi-label">Confirmées</div>
-      ${cancelled?`<div class="kpi-sub" style="color:var(--red)">${cancelled} annulée(s)</div>`:'<div class="kpi-sub up">0 annulation</div>'}
+      <div class="kpi-label">${T('k-confirmed')}</div>
+      ${cancelled?`<div class="kpi-sub" style="color:var(--red)">${cancelled} ${T('k-cancelled-sfx')}</div>`:`<div class="kpi-sub up">${T('k-nocancel')}</div>`}
     </div>
   `;
 
@@ -523,7 +523,7 @@ function renderDashboard() {
           <div class="res-date">${badge(r.status)}</div>
         </div>
       </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.82rem;padding:10px 0">Aucune réservation</p>';
+    : `<p style="color:var(--muted);font-size:.82rem;padding:10px 0">${T('empty-res')}</p>`;
 
   // Pending quick actions
   const pends = all.filter(r=>r.status==='pending').slice(0,5);
@@ -533,12 +533,12 @@ function renderDashboard() {
         <div class="pending-name">${esc(r.name)}</div>
         <div class="pending-car">🚗 ${esc(r.car)} · ${fmtN(r.total)} MAD</div>
         <div class="pending-btns">
-          <button class="p-btn confirm" onclick="updateStatus(${r.id},'confirmed')">✅ Confirmer</button>
-          <button class="p-btn cancel"  onclick="updateStatus(${r.id},'cancelled')">❌ Annuler</button>
+          <button class="p-btn confirm" onclick="updateStatus(${r.id},'confirmed')">${T('btn-confirm')}</button>
+          <button class="p-btn cancel"  onclick="updateStatus(${r.id},'cancelled')">${T('btn-reject')}</button>
           <button class="p-btn wa"      onclick="sendWA(${r.id})">📲</button>
         </div>
       </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.82rem;padding:10px 0">Aucune en attente ✓</p>';
+    : `<p style="color:var(--muted);font-size:.82rem;padding:10px 0">${T('empty-pending')}</p>`;
 
   // Status bars
   const counts = { pending, confirmed, completed:all.filter(r=>r.status==='completed').length, cancelled };
@@ -547,7 +547,7 @@ function renderDashboard() {
     const pct = total ? Math.round(n/total*100) : 0;
     return `<div class="sbar">
       <div class="sbar-val" style="color:${v.color}">${n}</div>
-      <div class="sbar-label">${v.label}</div>
+      <div class="sbar-label">${statusLabel(k)}</div>
       <div class="sbar-track"><div class="sbar-fill" style="width:${pct}%;background:${v.color}"></div></div>
       <div class="sbar-pct">${pct}%</div>
     </div>`;
@@ -1394,9 +1394,9 @@ function daysUntil(dateStr) {
   return Math.round((d - today) / 86400000);
 }
 function echLabelTxt(a) {
-  if (a.vidange) return a.expired ? `vidange dépassée de ${Math.abs(a.remaining)} km` : `vidange dans ${a.remaining} km`;
-  return a.expired ? `dépassée depuis ${Math.abs(a.days)}j`
-       : a.days === 0 ? `expire aujourd'hui` : `dans ${a.days}j`;
+  if (a.vidange) return a.expired ? `${T('lbl-vid-over')} ${Math.abs(a.remaining)} km` : `${T('lbl-vid-in')} ${a.remaining} km`;
+  return a.expired ? `${T('lbl-over-since')} ${Math.abs(a.days)}j`
+       : a.days === 0 ? T('lbl-expire-today') : `${T('lbl-in')} ${a.days}j`;
 }
 // Statut d'une date d'échéance pour affichage sur la fiche véhicule
 function echDateInfo(dateStr) {
@@ -1448,7 +1448,7 @@ function renderEcheances() {
     return `<div class="pending-item" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div>
         <div class="pending-name">${a.icon} ${esc(a.name)} — ${a.label}</div>
-        <div class="pending-car">${a.vidange ? esc(a.plate||'—')+' · entretien moteur' : esc(a.plate||'—')+' · échéance '+fmt(a.date)}</div>
+        <div class="pending-car">${a.vidange ? esc(a.plate||'—')+' · '+T('ech-engine') : esc(a.plate||'—')+' · '+T('ech-due')+' '+fmt(a.date)}</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge badge-${cls}">${echLabelTxt(a)}</span>

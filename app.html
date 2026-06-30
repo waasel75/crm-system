@@ -4,12 +4,12 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>CRM Réservations</title>
-  <link rel="stylesheet" href="css/admin.css?v=10"/>
+  <link rel="stylesheet" href="css/admin.css?v=11"/>
   <script>window.PAGE_SOURCE = 'all';</script>
-  <script src="js/auth.js?v=10"></script>
-  <script src="js/panel-lang.js?v=10"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/panel-lang.js?v=11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-config.js?v=10"></script>
+  <script src="js/supabase-config.js?v=11"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
   <style>
     .acc-info{display:flex;flex-direction:column}
@@ -40,7 +40,7 @@
       <button class="sb-link" onclick="showTab('vehicles',this)"><span class="sb-icon">🚙</span><span class="sb-txt" data-pt="nav-vehicles">Véhicules</span></button>
       <button class="sb-link" onclick="showTab('vidange',this)"><span class="sb-icon">🛢️</span><span class="sb-txt" data-pt="nav-vidange">Vidange</span></button>
       <button class="sb-link" onclick="showTab('stats',this)"><span class="sb-icon">📊</span><span class="sb-txt" data-pt="nav-stats">Statistiques</span></button>
-      <button class="sb-link" onclick="showTab('account',this)"><span class="sb-icon">👤</span><span class="sb-txt">Mon compte</span></button>
+      <button class="sb-link" onclick="showTab('account',this)"><span class="sb-icon">👤</span><span class="sb-txt" data-pt="mycompte">Mon compte</span></button>
       <button class="sb-link" onclick="showTab('settings',this)"><span class="sb-icon">⚙️</span><span class="sb-txt" data-pt="settings">Paramètres</span></button>
     </nav>
     <div class="sb-footer">
@@ -80,7 +80,7 @@
       <!-- Échéances Assurance / Visite technique -->
       <div class="dash-panel" id="echeancePanel" style="display:none;border:1px solid var(--yellow)">
         <div class="panel-header">
-          <h3>🔔 Échéances proches — Assurance, Visite technique &amp; Vidange</h3>
+          <h3 data-pt="ech-title">🔔 Échéances proches — Assurance, Visite technique &amp; Vidange</h3>
         </div>
         <div id="echeanceList"></div>
       </div>
@@ -313,7 +313,7 @@
 </div>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="js/admin.js?v=10"></script>
-<script src="js/supabase-store.js?v=10"></script>
+<script src="js/admin.js?v=11"></script>
+<script src="js/supabase-store.js?v=11"></script>
 </body>
 </html>

@@ -182,20 +182,23 @@
   <div class="wrap nav-in">
     <div class="logo">🚗 <b>CRM</b>&nbsp;SYSTEM</div>
     <div class="nav-cta">
-      <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
-      <button class="btn btn-primary" onclick="openAuth('signup')">S'inscrire</button>
+      <select id="topLangSel" onchange="applyPanelLang(this.value)" title="Langue" style="background:rgba(255,255,255,.06);color:inherit;border:1px solid var(--border);border-radius:8px;padding:8px 8px;font-size:.82rem;font-weight:700;cursor:pointer">
+        <option value="fr">🇫🇷 FR</option><option value="ar">🇲🇦 AR</option><option value="en">🇬🇧 EN</option><option value="es">🇪🇸 ES</option>
+      </select>
+      <button class="btn btn-ghost" onclick="openAuth('login')" data-pt="lp-login">Se connecter</button>
+      <button class="btn btn-primary" onclick="openAuth('signup')" data-pt="lp-signup">S'inscrire</button>
     </div>
   </div>
 </nav>
 
 <header class="hero">
   <div class="wrap">
-    <span class="badge reveal"><span class="dot"></span> Nouvelle génération de gestion automobile</span>
-    <h1 class="reveal">Votre agence de location<br/>entre dans <span class="grad">une autre dimension</span></h1>
-    <p class="lead reveal">Réservations, parc auto, échéances d'assurance, statistiques et rappels WhatsApp — toute votre agence pilotée depuis un seul cockpit intelligent, accessible partout, à chaque instant.</p>
+    <span class="badge reveal"><span class="dot"></span> <span data-pt="lp-badge">Nouvelle génération de gestion automobile</span></span>
+    <h1 class="reveal"><span data-pt="lp-hero1">Votre agence de location</span><br/><span data-pt="lp-hero2">entre dans</span> <span class="grad" data-pt="lp-hero3">une autre dimension</span></h1>
+    <p class="lead reveal" data-pt="lp-lead">Réservations, parc auto, échéances d'assurance, statistiques et rappels WhatsApp — toute votre agence pilotée depuis un seul cockpit intelligent, accessible partout, à chaque instant.</p>
     <div class="hero-cta reveal">
-      <button class="btn btn-primary" onclick="openAuth('signup')">Commencer gratuitement →</button>
-      <button class="btn btn-ghost" onclick="scrollToPlans()">Découvrir les offres</button>
+      <button class="btn btn-primary" onclick="openAuth('signup')" data-pt="lp-cta1">Commencer gratuitement →</button>
+      <button class="btn btn-ghost" onclick="scrollToPlans()" data-pt="lp-cta2">Découvrir les offres</button>
     </div>
     <div class="trust reveal">
       <span>✦ <b>Gratuit</b> pour démarrer</span>
@@ -373,6 +376,7 @@ document.querySelectorAll('[data-count]').forEach(el=>_co.observe(el));
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/panel-lang.js?v=11"></script>
 <script src="js/supabase-config.js?v=3"></script>
 <script src="js/landing.js?v=3"></script>
 </body>
