@@ -765,6 +765,7 @@ function openClientDetail(key) {
             <div>${badge(r.status)}</div>
           </div>
           ${r.contract ? `<a href="${r.contract}" download="${esc(r.contractName)||'contrat_'+r.id+(r.contract.startsWith('data:application/pdf')?'.pdf':'')}" onclick="event.stopPropagation()" class="btn-sm" style="margin-left:6px">⬇️ ${r.contract.startsWith('data:application/pdf')?'PDF':'Contrat'}</a>` : ''}
+          <button class="btn-sm" onclick="event.stopPropagation();openEditReservation(${r.id})" title="Modifier la réservation" style="margin-left:6px">✏️</button>
         </div>`).join('')}
     </div>
     <div class="modal-actions" style="margin-top:16px">
